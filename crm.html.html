@@ -1,0 +1,1149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>No Coast CRM</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:        #111213;
+  --surface:   #18191b;
+  --surface2:  #1f2023;
+  --border:    #2c2d30;
+  --border-hi: #454648;
+  --gold:      #c9951a;
+  --gold-dim:  rgba(201,149,26,0.15);
+  --text:      #dfe0e3;
+  --text-dim:  #7a7c82;
+  --text-muted:#434548;
+
+  --s-new:     #2563eb;
+  --s-quoted:  #ca8a04;
+  --s-deposit: #16a34a;
+  --s-wip:     #ea580c;
+  --s-pickup:  #0e7490;
+  --s-done:    #15803d;
+  --s-review:  #7c3aed;
+  --s-lost:    #525252;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'DM Sans', sans-serif;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* ── Top Bar ── */
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 24px;
+  height: 54px;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  gap: 16px;
+}
+
+.logo {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 1.4rem;
+  letter-spacing: 0.1em;
+  color: var(--gold);
+  white-space: nowrap;
+}
+
+.logo span {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.58rem;
+  letter-spacing: 0.18em;
+  color: var(--text-muted);
+  display: block;
+  margin-top: -2px;
+  text-transform: uppercase;
+}
+
+.topbar-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.url-input {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  color: var(--text-dim);
+  font-family: 'DM Mono', monospace;
+  font-size: 0.7rem;
+  padding: 6px 10px;
+  width: 300px;
+  outline: none;
+}
+
+.url-input:focus { border-color: var(--gold); color: var(--text); }
+
+.url-input::placeholder { color: var(--text-muted); }
+
+.btn {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.65rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding: 7px 14px;
+  border: 1px solid var(--border);
+  background: var(--surface2);
+  color: var(--text-dim);
+  cursor: pointer;
+  transition: all 0.12s;
+  white-space: nowrap;
+}
+
+.btn:hover { border-color: var(--border-hi); color: var(--text); }
+
+.btn-primary {
+  background: var(--gold);
+  border-color: var(--gold);
+  color: #000;
+  font-weight: 500;
+}
+
+.btn-primary:hover { background: #b8860b; border-color: #b8860b; color: #000; }
+
+/* ── Stats bar ── */
+.statsbar {
+  display: flex;
+  gap: 1px;
+  border-bottom: 1px solid var(--border);
+  background: var(--border);
+}
+
+.stat-cell {
+  flex: 1;
+  background: var(--surface);
+  padding: 14px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.stat-label {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.58rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.stat-value {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 1.8rem;
+  line-height: 1;
+  color: var(--text);
+}
+
+.stat-value.gold { color: var(--gold); }
+.stat-value.orange { color: #ea580c; }
+.stat-value.purple { color: #7c3aed; }
+
+/* ── Pipeline ── */
+.pipeline-wrap {
+  overflow-x: auto;
+  padding: 20px 24px 40px;
+}
+
+.pipeline {
+  display: flex;
+  gap: 14px;
+  min-width: max-content;
+  align-items: flex-start;
+}
+
+.pipeline-col {
+  width: 220px;
+  flex-shrink: 0;
+}
+
+.col-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 12px;
+  margin-bottom: 8px;
+  border-left: 3px solid;
+}
+
+.col-title {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.65rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.col-count {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 1.1rem;
+  line-height: 1;
+  opacity: 0.7;
+}
+
+/* Status colors */
+.col-new    { border-color: var(--s-new);    background: rgba(37,99,235,0.06); }
+.col-quoted { border-color: var(--s-quoted); background: rgba(202,138,4,0.06); }
+.col-deposit{ border-color: var(--s-deposit);background: rgba(22,163,74,0.06); }
+.col-wip    { border-color: var(--s-wip);    background: rgba(234,88,12,0.06); }
+.col-pickup { border-color: var(--s-pickup); background: rgba(14,116,144,0.06); }
+.col-done   { border-color: var(--s-done);   background: rgba(21,128,61,0.06); }
+.col-review { border-color: var(--s-review); background: rgba(124,58,237,0.06); }
+.col-lost   { border-color: var(--s-lost);   background: rgba(82,82,82,0.06); }
+
+.col-new    .col-title { color: #60a5fa; }
+.col-quoted .col-title { color: #fbbf24; }
+.col-deposit .col-title{ color: #4ade80; }
+.col-wip    .col-title { color: #fb923c; }
+.col-pickup .col-title { color: #22d3ee; }
+.col-done   .col-title { color: #4ade80; }
+.col-review .col-title { color: #a78bfa; }
+.col-lost   .col-title { color: #737373; }
+
+/* ── Cards ── */
+.cards { display: flex; flex-direction: column; gap: 8px; min-height: 60px; }
+
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  padding: 12px;
+  cursor: pointer;
+  transition: all 0.12s;
+  position: relative;
+}
+
+.card:hover {
+  border-color: var(--border-hi);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+}
+
+.card-name {
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--text);
+  margin-bottom: 4px;
+}
+
+.card-vehicle {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.68rem;
+  color: var(--text-dim);
+  margin-bottom: 6px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.card-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-bottom: 6px;
+}
+
+.tag {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.58rem;
+  letter-spacing: 0.08em;
+  padding: 2px 6px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+  max-width: 140px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.card-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 6px;
+  padding-top: 6px;
+  border-top: 1px solid var(--border);
+}
+
+.card-date {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.6rem;
+  color: var(--text-muted);
+}
+
+.card-value {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.68rem;
+  color: var(--gold);
+}
+
+.empty-col {
+  border: 1px dashed var(--border);
+  padding: 20px 10px;
+  text-align: center;
+  font-family: 'DM Mono', monospace;
+  font-size: 0.6rem;
+  letter-spacing: 0.1em;
+  color: var(--text-muted);
+  text-transform: uppercase;
+}
+
+/* ── Modal ── */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.75);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 200;
+  padding: 20px;
+  backdrop-filter: blur(2px);
+}
+
+.modal-overlay.hidden { display: none; }
+
+.modal {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  width: 100%;
+  max-width: 580px;
+  max-height: 90vh;
+  overflow-y: auto;
+  animation: slideUp 0.18s ease-out;
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border);
+  position: sticky;
+  top: 0;
+  background: var(--surface);
+  z-index: 1;
+}
+
+.modal-title {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 1.3rem;
+  letter-spacing: 0.08em;
+  color: var(--gold);
+}
+
+.modal-close {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  font-size: 1.2rem;
+  cursor: pointer;
+  padding: 2px 6px;
+  line-height: 1;
+  transition: color 0.1s;
+}
+
+.modal-close:hover { color: var(--text); }
+
+.modal-body {
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.modal-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+
+.field { display: flex; flex-direction: column; gap: 5px; }
+.field.full { grid-column: 1 / -1; }
+
+.field label {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.6rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.field input,
+.field select,
+.field textarea {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  color: var(--text);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.85rem;
+  padding: 8px 10px;
+  outline: none;
+  transition: border-color 0.12s;
+  width: 100%;
+}
+
+.field input:focus,
+.field select:focus,
+.field textarea:focus { border-color: var(--gold); }
+
+.field textarea { resize: vertical; min-height: 70px; line-height: 1.5; }
+
+.field select {
+  appearance: none;
+  cursor: pointer;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23666'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+}
+
+.modal-footer {
+  padding: 14px 20px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+/* Detail modal extras */
+.detail-status-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 20px;
+  background: var(--surface2);
+  border-bottom: 1px solid var(--border);
+}
+
+.detail-status-label {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.65rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+.status-badge {
+  display: inline-block;
+  font-family: 'DM Mono', monospace;
+  font-size: 0.65rem;
+  letter-spacing: 0.1em;
+  padding: 4px 10px;
+  border: 1px solid;
+}
+
+.status-select {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  color: var(--text);
+  font-family: 'DM Mono', monospace;
+  font-size: 0.72rem;
+  padding: 6px 28px 6px 10px;
+  outline: none;
+  cursor: pointer;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23666'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 8px center;
+}
+
+.detail-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  padding: 20px;
+}
+
+.detail-item { display: flex; flex-direction: column; gap: 3px; }
+.detail-item.full { grid-column: 1/-1; }
+
+.detail-label {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.58rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.detail-val {
+  font-size: 0.88rem;
+  color: var(--text);
+  line-height: 1.4;
+}
+
+.detail-val.mono {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.8rem;
+}
+
+.detail-val.gold { color: var(--gold); font-family: 'DM Mono', monospace; }
+
+.detail-edit {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  color: var(--text);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.85rem;
+  padding: 6px 10px;
+  outline: none;
+  width: 100%;
+  transition: border-color 0.12s;
+}
+
+.detail-edit:focus { border-color: var(--gold); }
+
+.delete-btn {
+  background: rgba(239,68,68,0.1);
+  border: 1px solid rgba(239,68,68,0.3);
+  color: #f87171;
+  font-family: 'DM Mono', monospace;
+  font-size: 0.62rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding: 7px 12px;
+  cursor: pointer;
+  transition: all 0.12s;
+}
+
+.delete-btn:hover { background: rgba(239,68,68,0.2); }
+
+/* Loading state */
+.loading-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 300;
+}
+
+.loading-overlay.hidden { display: none; }
+
+.spinner {
+  width: 32px; height: 32px;
+  border: 2px solid var(--border);
+  border-top-color: var(--gold);
+  border-radius: 50%;
+  animation: spin 0.6s linear infinite;
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* Toast */
+.toast {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--gold);
+  padding: 12px 18px;
+  font-family: 'DM Mono', monospace;
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+  color: var(--text);
+  z-index: 400;
+  animation: slideIn 0.2s ease-out;
+  max-width: 300px;
+}
+
+.toast.error { border-left-color: #ef4444; }
+.toast.hidden { display: none; }
+
+@keyframes slideIn {
+  from { opacity: 0; transform: translateX(10px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--border-hi); }
+
+/* Config section */
+.config-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 24px;
+  background: var(--surface2);
+  border-bottom: 1px solid var(--border);
+  font-family: 'DM Mono', monospace;
+  font-size: 0.62rem;
+  color: var(--text-muted);
+}
+
+.config-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--text-muted); }
+.config-dot.connected { background: #4ade80; }
+.config-dot.error { background: #ef4444; }
+</style>
+</head>
+<body>
+
+<!-- Top Bar -->
+<div class="topbar">
+  <div class="logo">
+    No Coast CRM
+    <span>Customer Pipeline</span>
+  </div>
+  <div class="topbar-right">
+    <input type="text" class="url-input" id="scriptUrl"
+      placeholder="Paste Apps Script exec URL here..."
+      oninput="saveUrl()">
+    <button class="btn" onclick="loadLeads()">↻ Refresh</button>
+    <button class="btn btn-primary" onclick="openAddModal()">+ New Lead</button>
+  </div>
+</div>
+
+<!-- Config status bar -->
+<div class="config-bar">
+  <div class="config-dot" id="connDot"></div>
+  <span id="connText">Paste your Apps Script exec URL above to connect</span>
+</div>
+
+<!-- Stats Bar -->
+<div class="statsbar">
+  <div class="stat-cell">
+    <span class="stat-label">Total Leads</span>
+    <span class="stat-value" id="statTotal">—</span>
+  </div>
+  <div class="stat-cell">
+    <span class="stat-label">Active Jobs</span>
+    <span class="stat-value orange" id="statActive">—</span>
+  </div>
+  <div class="stat-cell">
+    <span class="stat-label">Pipeline Value</span>
+    <span class="stat-value gold" id="statPipeline">—</span>
+  </div>
+  <div class="stat-cell">
+    <span class="stat-label">Need Review Ask</span>
+    <span class="stat-value purple" id="statReview">—</span>
+  </div>
+  <div class="stat-cell">
+    <span class="stat-label">Complete</span>
+    <span class="stat-value" id="statDone">—</span>
+  </div>
+</div>
+
+<!-- Pipeline -->
+<div class="pipeline-wrap">
+  <div class="pipeline" id="pipeline">
+    <!-- Rendered by JS -->
+  </div>
+</div>
+
+<!-- ── Add Lead Modal ── -->
+<div class="modal-overlay hidden" id="addModal" onclick="closeOnOverlay(event,'addModal')">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title">New Lead</span>
+      <button class="modal-close" onclick="closeModal('addModal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="modal-grid">
+        <div class="field">
+          <label>Customer Name *</label>
+          <input type="text" id="add_name" placeholder="First Last">
+        </div>
+        <div class="field">
+          <label>Contact (Phone or Email)</label>
+          <input type="text" id="add_contact" placeholder="701-555-0000">
+        </div>
+        <div class="field full">
+          <label>Vehicle (Year / Make / Model) *</label>
+          <input type="text" id="add_vehicle" placeholder="e.g. 2012 Ford F-150">
+        </div>
+        <div class="field full">
+          <label>Work Type</label>
+          <input type="text" id="add_work" placeholder="e.g. Seat Restoration, Headliner">
+        </div>
+        <div class="field">
+          <label>Source</label>
+          <select id="add_source">
+            <option value="">— Unknown —</option>
+            <option>Google Search</option>
+            <option>Instagram</option>
+            <option>Facebook</option>
+            <option>Referral</option>
+            <option>Repeat Customer</option>
+            <option>Drove Past / Saw Sign</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Status</label>
+          <select id="add_status">
+            <option>New Lead</option>
+            <option>Quoted</option>
+            <option>Deposit Paid</option>
+            <option>In Progress</option>
+            <option>Ready for Pickup</option>
+            <option>Complete</option>
+            <option>Review Requested</option>
+            <option>Closed / Lost</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Est. Value</label>
+          <input type="text" id="add_value" placeholder="e.g. $400–800">
+        </div>
+        <div class="field">
+          <label>Deposit Amount</label>
+          <input type="text" id="add_deposit" placeholder="e.g. $150">
+        </div>
+        <div class="field full">
+          <label>Notes</label>
+          <textarea id="add_notes" placeholder="Any additional details..."></textarea>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeModal('addModal')">Cancel</button>
+      <button class="btn btn-primary" onclick="submitAddLead()">Save Lead</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── Detail Modal ── -->
+<div class="modal-overlay hidden" id="detailModal" onclick="closeOnOverlay(event,'detailModal')">
+  <div class="modal" id="detailModalContent">
+    <!-- Rendered by JS -->
+  </div>
+</div>
+
+<!-- Loading -->
+<div class="loading-overlay hidden" id="loader">
+  <div class="spinner"></div>
+</div>
+
+<!-- Toast -->
+<div class="toast hidden" id="toast"></div>
+
+<script>
+// ── State ──────────────────────────────────────────────────
+let leads = [];
+let currentLead = null;
+
+const STATUSES = [
+  { key: 'New Lead',          cls: 'col-new',     col: '--s-new' },
+  { key: 'Quoted',            cls: 'col-quoted',  col: '--s-quoted' },
+  { key: 'Deposit Paid',      cls: 'col-deposit', col: '--s-deposit' },
+  { key: 'In Progress',       cls: 'col-wip',     col: '--s-wip' },
+  { key: 'Ready for Pickup',  cls: 'col-pickup',  col: '--s-pickup' },
+  { key: 'Complete',          cls: 'col-done',    col: '--s-done' },
+  { key: 'Review Requested',  cls: 'col-review',  col: '--s-review' },
+  { key: 'Closed / Lost',     cls: 'col-lost',    col: '--s-lost' }
+];
+
+// ── Init ───────────────────────────────────────────────────
+window.addEventListener('DOMContentLoaded', () => {
+  const saved = localStorage.getItem('nc_crm_url');
+  if (saved) {
+    document.getElementById('scriptUrl').value = saved;
+    loadLeads();
+  }
+  renderPipeline([]); // Empty state
+});
+
+function saveUrl() {
+  const val = document.getElementById('scriptUrl').value.trim();
+  if (val) localStorage.setItem('nc_crm_url', val);
+}
+
+function getUrl() {
+  return document.getElementById('scriptUrl').value.trim();
+}
+
+// ── API calls ──────────────────────────────────────────────
+async function apiFetch(params) {
+  const url = getUrl();
+  if (!url) { showToast('Paste your Apps Script URL first', 'error'); return null; }
+  const qs = new URLSearchParams(params).toString();
+  const res = await fetch(`${url}?${qs}`);
+  return res.json();
+}
+
+// All mutations use GET to avoid CORS preflight issues with Apps Script
+async function apiPost(body) {
+  const url = getUrl();
+  if (!url) { showToast('Paste your Apps Script URL first', 'error'); return null; }
+  const action = body.action;
+  let params = { action };
+
+  if (action === 'addLead') {
+    params.data = encodeURIComponent(JSON.stringify(body.data));
+  } else if (action === 'updateLead') {
+    params.id    = body.id;
+    params.field = body.field;
+    params.value = encodeURIComponent(body.value);
+  } else if (action === 'deleteLead') {
+    params.id = body.id;
+  }
+
+  const qs  = new URLSearchParams(params).toString();
+  const res = await fetch(`${url}?${qs}`);
+  return res.json();
+}
+
+async function loadLeads() {
+  const url = getUrl();
+  if (!url) return;
+  setLoading(true);
+  try {
+    const leadsData = await apiFetch({ action: 'getLeads' });
+    if (leadsData && !leadsData.error) {
+      leads = leadsData;
+      renderPipeline(leads);
+      updateStats(calcStats(leads));
+      setConnected(true);
+    } else {
+      setConnected(false);
+      showToast(leadsData?.error || 'Connection failed', 'error');
+    }
+  } catch (e) {
+    setConnected(false);
+    showToast('Connection failed — check your URL', 'error');
+  } finally {
+    setLoading(false);
+  }
+}
+
+function calcStats(allLeads) {
+  const stats = { total: allLeads.length, byStatus: {}, pipelineValue: 0, activeJobs: 0, needsReview: 0 };
+  allLeads.forEach(lead => {
+    const status = lead['Status'] || 'New Lead';
+    stats.byStatus[status] = (stats.byStatus[status] || 0) + 1;
+    if (['Deposit Paid','In Progress','Ready for Pickup'].includes(status)) stats.activeJobs++;
+    if (status === 'Complete' && lead['Review Req.'] !== 'Y') stats.needsReview++;
+    const val  = String(lead['Est. Value'] || '');
+    const nums = val.match(/\d[\d,]*/g);
+    if (nums) {
+      const avg = nums.reduce((s, n) => s + parseInt(n.replace(/,/g,'')), 0) / nums.length;
+      if (!isNaN(avg) && avg < 100000) stats.pipelineValue += avg;
+    }
+  });
+  return stats;
+}
+
+// ── Render pipeline ────────────────────────────────────────
+function renderPipeline(allLeads) {
+  const pipeline = document.getElementById('pipeline');
+  pipeline.innerHTML = '';
+
+  STATUSES.forEach(({ key, cls }) => {
+    const colLeads = allLeads.filter(l => (l['Status'] || 'New Lead') === key);
+    const col = document.createElement('div');
+    col.className = 'pipeline-col';
+
+    const header = `
+      <div class="col-header ${cls}">
+        <span class="col-title">${key}</span>
+        <span class="col-count">${colLeads.length}</span>
+      </div>`;
+
+    const cards = colLeads.length
+      ? colLeads.map(lead => renderCard(lead)).join('')
+      : `<div class="empty-col">Empty</div>`;
+
+    col.innerHTML = header + `<div class="cards">${cards}</div>`;
+    pipeline.appendChild(col);
+  });
+
+  // Click handlers
+  pipeline.querySelectorAll('.card').forEach(card => {
+    card.addEventListener('click', () => {
+      const id = card.dataset.id;
+      const lead = leads.find(l => l['ID'].toString() === id);
+      if (lead) openDetailModal(lead);
+    });
+  });
+}
+
+function renderCard(lead) {
+  const name    = lead['Customer Name'] || 'Unknown';
+  const vehicle = lead['Vehicle'] || '—';
+  const work    = lead['Work Type'] || '';
+  const date    = lead['Date Added'] || '';
+  const value   = lead['Est. Value'] || '';
+
+  const tags = work.split(',').slice(0, 2).map(w =>
+    `<span class="tag">${w.trim()}</span>`
+  ).join('');
+
+  return `
+    <div class="card" data-id="${lead['ID']}">
+      <div class="card-name">${esc(name)}</div>
+      <div class="card-vehicle">${esc(vehicle)}</div>
+      ${tags ? `<div class="card-tags">${tags}</div>` : ''}
+      <div class="card-footer">
+        <span class="card-date">${date}</span>
+        ${value ? `<span class="card-value">${esc(value)}</span>` : ''}
+      </div>
+    </div>`;
+}
+
+// ── Add lead ───────────────────────────────────────────────
+function openAddModal() {
+  ['add_name','add_contact','add_vehicle','add_work','add_value','add_deposit','add_notes']
+    .forEach(id => { document.getElementById(id).value = ''; });
+  document.getElementById('add_status').value = 'New Lead';
+  document.getElementById('add_source').value = '';
+  openModal('addModal');
+}
+
+async function submitAddLead() {
+  const name    = document.getElementById('add_name').value.trim();
+  const vehicle = document.getElementById('add_vehicle').value.trim();
+  if (!name || !vehicle) {
+    showToast('Name and vehicle are required', 'error');
+    return;
+  }
+
+  setLoading(true);
+  try {
+    const result = await apiPost({
+      action: 'addLead',
+      data: {
+        customerName:  name,
+        contact:       document.getElementById('add_contact').value.trim(),
+        vehicle:       vehicle,
+        workType:      document.getElementById('add_work').value.trim(),
+        source:        document.getElementById('add_source').value,
+        status:        document.getElementById('add_status').value,
+        estValue:      document.getElementById('add_value').value.trim(),
+        depositAmount: document.getElementById('add_deposit').value.trim(),
+        notes:         document.getElementById('add_notes').value.trim()
+      }
+    });
+
+    if (result?.success) {
+      closeModal('addModal');
+      await loadLeads();
+      showToast('Lead added ✓');
+    } else {
+      showToast(result?.error || 'Failed to add lead', 'error');
+    }
+  } catch (e) {
+    showToast('Error: ' + e.message, 'error');
+  } finally {
+    setLoading(false);
+  }
+}
+
+// ── Detail modal ───────────────────────────────────────────
+function openDetailModal(lead) {
+  currentLead = lead;
+  const content = document.getElementById('detailModalContent');
+
+  const statusColor = getStatusColor(lead['Status']);
+
+  content.innerHTML = `
+    <div class="modal-header">
+      <span class="modal-title">${esc(lead['Customer Name'] || 'Lead Detail')}</span>
+      <button class="modal-close" onclick="closeModal('detailModal')">✕</button>
+    </div>
+
+    <div class="detail-status-row">
+      <span class="detail-status-label">Status</span>
+      <select class="status-select" id="detail_status" onchange="updateStatus()">
+        ${STATUSES.map(s => `<option ${s.key === lead['Status'] ? 'selected' : ''}>${s.key}</option>`).join('')}
+      </select>
+    </div>
+
+    <div class="detail-grid">
+      <div class="detail-item">
+        <span class="detail-label">Vehicle</span>
+        <span class="detail-val mono">${esc(lead['Vehicle'] || '—')}</span>
+      </div>
+      <div class="detail-item">
+        <span class="detail-label">Contact</span>
+        <span class="detail-val">${esc(lead['Contact'] || '—')}</span>
+      </div>
+      <div class="detail-item full">
+        <span class="detail-label">Work Type</span>
+        <span class="detail-val">${esc(lead['Work Type'] || '—')}</span>
+      </div>
+      <div class="detail-item">
+        <span class="detail-label">Source</span>
+        <span class="detail-val">${esc(lead['Source'] || '—')}</span>
+      </div>
+      <div class="detail-item">
+        <span class="detail-label">Date Added</span>
+        <span class="detail-val mono">${esc(lead['Date Added'] || '—')}</span>
+      </div>
+      <div class="detail-item">
+        <span class="detail-label">Est. Value</span>
+        <input class="detail-edit" id="detail_value" value="${esc(lead['Est. Value'] || '')}" 
+          placeholder="e.g. $400–800" onblur="saveField('Est. Value','detail_value')">
+      </div>
+      <div class="detail-item">
+        <span class="detail-label">Deposit Amount</span>
+        <input class="detail-edit" id="detail_deposit" value="${esc(lead['Deposit Amount'] || '')}"
+          placeholder="e.g. $150" onblur="saveField('Deposit Amount','detail_deposit')">
+      </div>
+      <div class="detail-item">
+        <span class="detail-label">Quote Sent Date</span>
+        <input class="detail-edit" id="detail_quoteSent" type="date" value="${esc(lead['Quote Sent'] || '')}"
+          onblur="saveField('Quote Sent','detail_quoteSent')">
+      </div>
+      <div class="detail-item">
+        <span class="detail-label">Completion Date</span>
+        <input class="detail-edit" id="detail_completion" type="date" value="${esc(lead['Completion Date'] || '')}"
+          onblur="saveField('Completion Date','detail_completion')">
+      </div>
+      <div class="detail-item">
+        <span class="detail-label">Review Requested</span>
+        <select class="detail-edit" id="detail_reviewReq" onchange="saveField('Review Req.','detail_reviewReq')">
+          <option ${lead['Review Req.'] !== 'Y' ? 'selected' : ''}>N</option>
+          <option ${lead['Review Req.'] === 'Y' ? 'selected' : ''}>Y</option>
+        </select>
+      </div>
+      <div class="detail-item">
+        <span class="detail-label">Review Received</span>
+        <select class="detail-edit" id="detail_reviewRecv" onchange="saveField('Review Recv.','detail_reviewRecv')">
+          <option ${lead['Review Recv.'] !== 'Y' ? 'selected' : ''}>N</option>
+          <option ${lead['Review Recv.'] === 'Y' ? 'selected' : ''}>Y</option>
+        </select>
+      </div>
+      <div class="detail-item full">
+        <span class="detail-label">Notes</span>
+        <textarea class="detail-edit" id="detail_notes" rows="3"
+          onblur="saveField('Notes','detail_notes')">${esc(lead['Notes'] || '')}</textarea>
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <button class="delete-btn" onclick="deleteLead()">Delete Lead</button>
+      <button class="btn" onclick="closeModal('detailModal')">Close</button>
+    </div>`;
+
+  openModal('detailModal');
+}
+
+async function updateStatus() {
+  if (!currentLead) return;
+  const newStatus = document.getElementById('detail_status').value;
+  await patchField('Status', newStatus);
+}
+
+async function saveField(fieldName, inputId) {
+  if (!currentLead) return;
+  const val = document.getElementById(inputId).value;
+  await patchField(fieldName, val);
+}
+
+async function patchField(field, value) {
+  try {
+    const result = await apiPost({
+      action: 'updateLead',
+      id: currentLead['ID'],
+      field, value
+    });
+    if (result?.success) {
+      currentLead[field] = value;
+      // Refresh pipeline in background
+      loadLeads();
+      showToast('Saved ✓');
+    } else {
+      showToast(result?.error || 'Save failed', 'error');
+    }
+  } catch (e) {
+    showToast('Error saving', 'error');
+  }
+}
+
+async function deleteLead() {
+  if (!currentLead) return;
+  if (!confirm(`Delete ${currentLead['Customer Name']}? This cannot be undone.`)) return;
+  setLoading(true);
+  try {
+    const result = await apiPost({ action: 'deleteLead', id: currentLead['ID'] });
+    if (result?.success) {
+      closeModal('detailModal');
+      await loadLeads();
+      showToast('Lead deleted');
+    } else {
+      showToast(result?.error || 'Delete failed', 'error');
+    }
+  } catch (e) {
+    showToast('Error deleting', 'error');
+  } finally {
+    setLoading(false);
+  }
+}
+
+// ── Stats ──────────────────────────────────────────────────
+function updateStats(stats) {
+  document.getElementById('statTotal').textContent    = stats.total || 0;
+  document.getElementById('statActive').textContent   = stats.activeJobs || 0;
+  document.getElementById('statPipeline').textContent = '$' + Math.round(stats.pipelineValue || 0).toLocaleString();
+  document.getElementById('statReview').textContent   = stats.needsReview || 0;
+  document.getElementById('statDone').textContent     = stats.byStatus?.['Complete'] || 0;
+}
+
+// ── Helpers ────────────────────────────────────────────────
+function getStatusColor(status) {
+  const map = {
+    'New Lead': '#2563eb', 'Quoted': '#ca8a04', 'Deposit Paid': '#16a34a',
+    'In Progress': '#ea580c', 'Ready for Pickup': '#0e7490', 'Complete': '#15803d',
+    'Review Requested': '#7c3aed', 'Closed / Lost': '#525252'
+  };
+  return map[status] || '#525252';
+}
+
+function setConnected(ok) {
+  const dot  = document.getElementById('connDot');
+  const text = document.getElementById('connText');
+  dot.className  = 'config-dot ' + (ok ? 'connected' : 'error');
+  text.textContent = ok ? 'Connected to Google Sheets' : 'Connection error — check your exec URL';
+}
+
+function setLoading(on) {
+  document.getElementById('loader').classList.toggle('hidden', !on);
+}
+
+let toastTimer;
+function showToast(msg, type = '') {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.className = 'toast' + (type === 'error' ? ' error' : '');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => { el.classList.add('hidden'); }, 2500);
+}
+
+function openModal(id)  { document.getElementById(id).classList.remove('hidden'); }
+function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
+
+function closeOnOverlay(e, id) {
+  if (e.target === document.getElementById(id)) closeModal(id);
+}
+
+function esc(str) {
+  return String(str)
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;');
+}
+</script>
+</body>
+</html>

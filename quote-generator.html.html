@@ -1,0 +1,936 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>No Coast Quote Generator</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0e0e0e;
+    --surface: #161616;
+    --surface2: #1f1f1f;
+    --border: #2a2a2a;
+    --border-lit: #444;
+    --accent: #d4a017;
+    --accent2: #b8860b;
+    --text: #e8e8e8;
+    --text-dim: #888;
+    --text-muted: #555;
+    --green: #3ddc84;
+    --red: #ff6b6b;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'IBM Plex Sans', sans-serif;
+    min-height: 100vh;
+    padding: 0;
+  }
+
+  /* Noise texture overlay */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 0;
+    opacity: 0.4;
+  }
+
+  .container {
+    position: relative;
+    z-index: 1;
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 0 20px 60px;
+  }
+
+  /* Header */
+  header {
+    padding: 32px 0 28px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 36px;
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 16px;
+  }
+
+  .brand {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .brand-name {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 2.4rem;
+    letter-spacing: 0.08em;
+    color: var(--accent);
+    line-height: 1;
+  }
+
+  .brand-sub {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.65rem;
+    letter-spacing: 0.2em;
+    color: var(--text-muted);
+    text-transform: uppercase;
+  }
+
+  .header-badge {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.6rem;
+    letter-spacing: 0.15em;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    text-align: right;
+    line-height: 1.6;
+  }
+
+  /* API Key section */
+  .api-section {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--accent);
+    padding: 16px 20px;
+    margin-bottom: 28px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+
+  .api-label {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.7rem;
+    letter-spacing: 0.12em;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+
+  .api-input {
+    flex: 1;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.8rem;
+    padding: 8px 12px;
+    outline: none;
+    letter-spacing: 0.05em;
+  }
+
+  .api-input:focus { border-color: var(--accent); }
+
+  .api-save {
+    background: var(--border);
+    border: none;
+    color: var(--text-dim);
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.65rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    padding: 8px 14px;
+    cursor: pointer;
+    transition: all 0.15s;
+    white-space: nowrap;
+  }
+
+  .api-save:hover { background: var(--border-lit); color: var(--text); }
+  .api-save.saved { background: var(--green); color: #000; }
+
+  /* Two-column layout */
+  .layout {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 28px;
+    align-items: start;
+  }
+
+  @media (max-width: 700px) {
+    .layout { grid-template-columns: 1fr; }
+    header { flex-direction: column; align-items: flex-start; }
+  }
+
+  /* Panels */
+  .panel {
+    background: var(--surface);
+    border: 1px solid var(--border);
+  }
+
+  .panel-header {
+    padding: 14px 20px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .panel-num {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.4rem;
+    color: var(--accent);
+    line-height: 1;
+  }
+
+  .panel-title {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.7rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+  }
+
+  .panel-body { padding: 20px; display: flex; flex-direction: column; gap: 14px; }
+
+  /* Form fields */
+  .field { display: flex; flex-direction: column; gap: 6px; }
+
+  .field-label {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.62rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+  }
+
+  .field input, .field select, .field textarea {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-size: 0.85rem;
+    padding: 9px 12px;
+    outline: none;
+    width: 100%;
+    transition: border-color 0.15s;
+  }
+
+  .field input:focus, .field select:focus, .field textarea:focus {
+    border-color: var(--accent);
+  }
+
+  .field textarea { resize: vertical; min-height: 80px; line-height: 1.5; }
+
+  .field select {
+    appearance: none;
+    cursor: pointer;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23666'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+  }
+
+  /* Checkboxes */
+  .checkbox-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+
+  .check-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    padding: 7px 10px;
+    border: 1px solid var(--border);
+    background: var(--bg);
+    transition: all 0.12s;
+  }
+
+  .check-item:hover { border-color: var(--border-lit); }
+  .check-item.active { border-color: var(--accent); background: rgba(212,160,23,0.06); }
+
+  .check-item input { display: none; }
+
+  .check-box {
+    width: 14px; height: 14px;
+    border: 1px solid var(--border-lit);
+    flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.12s;
+  }
+
+  .check-item.active .check-box {
+    background: var(--accent);
+    border-color: var(--accent);
+  }
+
+  .check-dot {
+    width: 6px; height: 6px;
+    background: #000;
+    opacity: 0;
+    transition: opacity 0.12s;
+  }
+
+  .check-item.active .check-dot { opacity: 1; }
+
+  .check-label {
+    font-size: 0.78rem;
+    color: var(--text-dim);
+    line-height: 1.2;
+  }
+
+  .check-item.active .check-label { color: var(--text); }
+
+  /* Pricing reference */
+  .pricing-panel {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    padding: 16px;
+    margin-top: 4px;
+  }
+
+  .pricing-title {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.6rem;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 10px;
+  }
+
+  .price-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    padding: 4px 0;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .price-row:last-child { border-bottom: none; }
+
+  .price-name {
+    font-size: 0.75rem;
+    color: var(--text-dim);
+  }
+
+  .price-val {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.72rem;
+    color: var(--accent);
+  }
+
+  /* Generate button */
+  .generate-btn {
+    background: var(--accent);
+    border: none;
+    color: #000;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.2rem;
+    letter-spacing: 0.12em;
+    padding: 16px 28px;
+    cursor: pointer;
+    width: 100%;
+    transition: all 0.15s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    margin-top: 8px;
+  }
+
+  .generate-btn:hover { background: var(--accent2); }
+  .generate-btn:disabled { background: var(--border); color: var(--text-muted); cursor: not-allowed; }
+
+  .btn-icon { font-size: 1rem; }
+
+  /* Spinner */
+  .spinner {
+    width: 16px; height: 16px;
+    border: 2px solid rgba(0,0,0,0.3);
+    border-top-color: #000;
+    border-radius: 50%;
+    animation: spin 0.6s linear infinite;
+  }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* Output panel — full width */
+  .output-section {
+    margin-top: 28px;
+  }
+
+  .output-panel {
+    background: var(--surface);
+    border: 1px solid var(--border);
+  }
+
+  .output-header {
+    padding: 14px 20px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .output-title-group {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .output-actions {
+    display: flex;
+    gap: 8px;
+  }
+
+  .action-btn {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    color: var(--text-dim);
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.62rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    padding: 6px 12px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+
+  .action-btn:hover { border-color: var(--border-lit); color: var(--text); }
+  .action-btn.copied { background: var(--green); border-color: var(--green); color: #000; }
+
+  .output-body {
+    padding: 24px;
+  }
+
+  .output-empty {
+    text-align: center;
+    padding: 48px 20px;
+    color: var(--text-muted);
+  }
+
+  .empty-icon {
+    font-size: 2rem;
+    margin-bottom: 10px;
+    opacity: 0.3;
+  }
+
+  .empty-text {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.7rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+  }
+
+  .email-output {
+    white-space: pre-wrap;
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-size: 0.88rem;
+    line-height: 1.75;
+    color: var(--text);
+    background: var(--bg);
+    border: 1px solid var(--border);
+    padding: 24px;
+    min-height: 200px;
+  }
+
+  /* Status bar */
+  .status-bar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 20px;
+    border-top: 1px solid var(--border);
+    background: var(--surface2);
+  }
+
+  .status-dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--text-muted);
+  }
+
+  .status-dot.active { background: var(--green); animation: pulse 1.5s ease-in-out infinite; }
+  .status-dot.error { background: var(--red); }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; }
+  }
+
+  .status-text {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.65rem;
+    letter-spacing: 0.1em;
+    color: var(--text-muted);
+  }
+
+  /* Tone selector */
+  .tone-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 6px;
+  }
+
+  .tone-btn {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    color: var(--text-dim);
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.62rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    padding: 8px 6px;
+    cursor: pointer;
+    transition: all 0.12s;
+    text-align: center;
+  }
+
+  .tone-btn:hover { border-color: var(--border-lit); color: var(--text); }
+  .tone-btn.active { border-color: var(--accent); color: var(--accent); background: rgba(212,160,23,0.06); }
+
+  /* Divider */
+  .divider {
+    height: 1px;
+    background: var(--border);
+    margin: 6px 0;
+  }
+
+  /* Error message */
+  .error-msg {
+    background: rgba(255,107,107,0.1);
+    border: 1px solid rgba(255,107,107,0.3);
+    color: var(--red);
+    padding: 12px 16px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.75rem;
+    line-height: 1.5;
+  }
+
+  /* Fade-in animation */
+  .fade-in {
+    animation: fadeIn 0.3s ease-out;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(4px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <header>
+    <div class="brand">
+      <div class="brand-name">No Coast Customs</div>
+      <div class="brand-sub">Quote Generator — Internal Tool v1.0</div>
+    </div>
+    <div class="header-badge">
+      Grand Forks, ND<br>
+      By Appointment Only
+    </div>
+  </header>
+
+  <!-- API Key -->
+  <div class="api-section">
+    <span class="api-label">API Key</span>
+    <input type="password" class="api-input" id="apiKey" placeholder="sk-ant-..." autocomplete="off">
+    <button class="api-save" id="saveKeyBtn" onclick="saveKey()">Save</button>
+  </div>
+
+  <!-- Main layout -->
+  <div class="layout">
+
+    <!-- Left: Customer Info -->
+    <div class="panel">
+      <div class="panel-header">
+        <span class="panel-num">01</span>
+        <span class="panel-title">Customer & Vehicle</span>
+      </div>
+      <div class="panel-body">
+        <div class="field">
+          <label class="field-label">Customer Name</label>
+          <input type="text" id="customerName" placeholder="First Last">
+        </div>
+        <div class="field">
+          <label class="field-label">Vehicle (Year / Make / Model)</label>
+          <input type="text" id="vehicle" placeholder="e.g. 2008 Chevy Silverado">
+        </div>
+        <div class="field">
+          <label class="field-label">Work Needed</label>
+          <div class="checkbox-grid" id="workTypes">
+            <label class="check-item" onclick="toggleCheck(this)">
+              <input type="checkbox" value="Seat Restoration/Repair">
+              <div class="check-box"><div class="check-dot"></div></div>
+              <span class="check-label">Seat Restoration</span>
+            </label>
+            <label class="check-item" onclick="toggleCheck(this)">
+              <input type="checkbox" value="Door Panels">
+              <div class="check-box"><div class="check-dot"></div></div>
+              <span class="check-label">Door Panels</span>
+            </label>
+            <label class="check-item" onclick="toggleCheck(this)">
+              <input type="checkbox" value="Headliner">
+              <div class="check-box"><div class="check-dot"></div></div>
+              <span class="check-label">Headliner</span>
+            </label>
+            <label class="check-item" onclick="toggleCheck(this)">
+              <input type="checkbox" value="Carpet/Floor">
+              <div class="check-box"><div class="check-dot"></div></div>
+              <span class="check-label">Carpet / Floor</span>
+            </label>
+            <label class="check-item" onclick="toggleCheck(this)">
+              <input type="checkbox" value="Convertible Top">
+              <div class="check-box"><div class="check-dot"></div></div>
+              <span class="check-label">Convertible Top</span>
+            </label>
+            <label class="check-item" onclick="toggleCheck(this)">
+              <input type="checkbox" value="Custom Interior Build">
+              <div class="check-box"><div class="check-dot"></div></div>
+              <span class="check-label">Custom Interior</span>
+            </label>
+            <label class="check-item" onclick="toggleCheck(this)">
+              <input type="checkbox" value="Powersports (RZR/Sled)">
+              <div class="check-box"><div class="check-dot"></div></div>
+              <span class="check-label">Powersports</span>
+            </label>
+            <label class="check-item" onclick="toggleCheck(this)">
+              <input type="checkbox" value="Boat Interior">
+              <div class="check-box"><div class="check-dot"></div></div>
+              <span class="check-label">Boat Interior</span>
+            </label>
+          </div>
+        </div>
+        <div class="field">
+          <label class="field-label">Condition / Damage Notes</label>
+          <textarea id="condition" placeholder="Describe current condition, tears, fading, specific damage..."></textarea>
+        </div>
+        <div class="field">
+          <label class="field-label">Material Preference</label>
+          <input type="text" id="material" placeholder="e.g. black leather, OEM vinyl match, custom two-tone...">
+        </div>
+      </div>
+    </div>
+
+    <!-- Right: Job Details + Settings -->
+    <div class="panel">
+      <div class="panel-header">
+        <span class="panel-num">02</span>
+        <span class="panel-title">Job Details & Settings</span>
+      </div>
+      <div class="panel-body">
+        <div class="field">
+          <label class="field-label">Timeline</label>
+          <select id="timeline">
+            <option value="">— Select —</option>
+            <option value="ASAP / flexible">ASAP / Flexible</option>
+            <option value="within 2 weeks">Within 2 Weeks</option>
+            <option value="within a month">Within a Month</option>
+            <option value="2–3 months out">2–3 Months Out</option>
+            <option value="no rush / planning ahead">No Rush / Planning Ahead</option>
+          </select>
+        </div>
+        <div class="field">
+          <label class="field-label">Customer Budget Range</label>
+          <select id="budget">
+            <option value="">— Unknown / Not Stated —</option>
+            <option value="under $300">Under $300</option>
+            <option value="$300–$600">$300–$600</option>
+            <option value="$600–$1,200">$600–$1,200</option>
+            <option value="$1,200–$2,500">$1,200–$2,500</option>
+            <option value="$2,500+">$2,500+</option>
+            <option value="open / whatever it takes">Open / Whatever It Takes</option>
+          </select>
+        </div>
+        <div class="field">
+          <label class="field-label">How They Found You</label>
+          <select id="source">
+            <option value="">— Unknown —</option>
+            <option value="Google Search">Google Search</option>
+            <option value="Instagram">Instagram</option>
+            <option value="Facebook">Facebook</option>
+            <option value="referral from a friend">Referral</option>
+            <option value="repeat customer">Repeat Customer</option>
+            <option value="drove past / saw the shop">Drove Past / Saw Sign</option>
+          </select>
+        </div>
+        <div class="field">
+          <label class="field-label">Additional Notes</label>
+          <textarea id="notes" placeholder="Any other details, special requests, or context..."></textarea>
+        </div>
+
+        <div class="divider"></div>
+
+        <div class="field">
+          <label class="field-label">Quote Tone</label>
+          <div class="tone-grid" id="toneGrid">
+            <button class="tone-btn active" data-tone="Professional & warm">Warm Pro</button>
+            <button class="tone-btn" data-tone="Confident & direct">Direct</button>
+            <button class="tone-btn" data-tone="Detailed & thorough">Detailed</button>
+          </div>
+        </div>
+
+        <div class="divider"></div>
+
+        <!-- Pricing reference -->
+        <div class="pricing-panel">
+          <div class="pricing-title">📋 Pricing Reference (edit as needed)</div>
+          <div class="price-row"><span class="price-name">Seat repair (minor)</span><span class="price-val" contenteditable="true">$80–150</span></div>
+          <div class="price-row"><span class="price-name">Full seat recover (per seat)</span><span class="price-val" contenteditable="true">$200–400</span></div>
+          <div class="price-row"><span class="price-name">Door panels (pair)</span><span class="price-val" contenteditable="true">$300–600</span></div>
+          <div class="price-row"><span class="price-name">Headliner</span><span class="price-val" contenteditable="true">$250–500</span></div>
+          <div class="price-row"><span class="price-name">Full carpet kit</span><span class="price-val" contenteditable="true">$400–900</span></div>
+          <div class="price-row"><span class="price-name">Convertible top</span><span class="price-val" contenteditable="true">$800–1,800</span></div>
+          <div class="price-row"><span class="price-name">Powersports seat</span><span class="price-val" contenteditable="true">$150–350</span></div>
+          <div class="price-row"><span class="price-name">Full custom interior</span><span class="price-val" contenteditable="true">$2,000–5,000+</span></div>
+        </div>
+
+        <button class="generate-btn" id="generateBtn" onclick="generateQuote()">
+          <span class="btn-icon">⚡</span>
+          <span id="btnText">Generate Quote Email</span>
+        </button>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- Output Section -->
+  <div class="output-section" id="outputSection">
+    <div class="output-panel">
+      <div class="output-header">
+        <div class="output-title-group">
+          <span class="panel-num">03</span>
+          <span class="panel-title">Generated Quote Email</span>
+        </div>
+        <div class="output-actions">
+          <button class="action-btn" id="copyBtn" onclick="copyOutput()" style="display:none">Copy Email</button>
+          <button class="action-btn" onclick="clearOutput()" style="display:none" id="clearBtn">Clear</button>
+        </div>
+      </div>
+      <div class="output-body">
+        <div class="output-empty" id="emptyState">
+          <div class="empty-icon">✉</div>
+          <div class="empty-text">Fill in the form and hit generate</div>
+        </div>
+        <pre class="email-output fade-in" id="emailOutput" style="display:none"></pre>
+        <div class="error-msg fade-in" id="errorMsg" style="display:none"></div>
+      </div>
+      <div class="status-bar">
+        <div class="status-dot" id="statusDot"></div>
+        <span class="status-text" id="statusText">Ready</span>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  // ── State ──────────────────────────────────────────────────────────────────
+  let selectedTone = 'Professional & warm';
+
+  // ── API Key ────────────────────────────────────────────────────────────────
+  window.addEventListener('DOMContentLoaded', () => {
+    const saved = localStorage.getItem('nc_api_key');
+    if (saved) document.getElementById('apiKey').value = saved;
+  });
+
+  function saveKey() {
+    const val = document.getElementById('apiKey').value.trim();
+    if (!val) return;
+    localStorage.setItem('nc_api_key', val);
+    const btn = document.getElementById('saveKeyBtn');
+    btn.textContent = 'Saved ✓';
+    btn.classList.add('saved');
+    setTimeout(() => { btn.textContent = 'Save'; btn.classList.remove('saved'); }, 2000);
+  }
+
+  // ── Checkboxes ─────────────────────────────────────────────────────────────
+  function toggleCheck(label) {
+    label.classList.toggle('active');
+    const cb = label.querySelector('input[type="checkbox"]');
+    cb.checked = !cb.checked;
+  }
+
+  function getCheckedWork() {
+    return [...document.querySelectorAll('#workTypes .check-item.active')]
+      .map(el => el.querySelector('input').value);
+  }
+
+  // ── Tone buttons ───────────────────────────────────────────────────────────
+  document.getElementById('toneGrid').addEventListener('click', e => {
+    const btn = e.target.closest('.tone-btn');
+    if (!btn) return;
+    document.querySelectorAll('.tone-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    selectedTone = btn.dataset.tone;
+  });
+
+  // ── Pricing reference ──────────────────────────────────────────────────────
+  function getPricingData() {
+    const rows = document.querySelectorAll('.price-row');
+    return [...rows].map(r => {
+      const name = r.querySelector('.price-name').textContent.trim();
+      const val = r.querySelector('.price-val').textContent.trim();
+      return `${name}: ${val}`;
+    }).join('\n');
+  }
+
+  // ── Status bar ─────────────────────────────────────────────────────────────
+  function setStatus(state, text) {
+    const dot = document.getElementById('statusDot');
+    const txt = document.getElementById('statusText');
+    dot.className = 'status-dot' + (state === 'active' ? ' active' : state === 'error' ? ' error' : '');
+    txt.textContent = text;
+  }
+
+  // ── Generate ───────────────────────────────────────────────────────────────
+  async function generateQuote() {
+    const apiKey = document.getElementById('apiKey').value.trim();
+    if (!apiKey) {
+      showError('No API key found. Paste your Anthropic API key above and save it.');
+      return;
+    }
+
+    const customerName = document.getElementById('customerName').value.trim();
+    const vehicle      = document.getElementById('vehicle').value.trim();
+    const workTypes    = getCheckedWork();
+    const condition    = document.getElementById('condition').value.trim();
+    const material     = document.getElementById('material').value.trim();
+    const timeline     = document.getElementById('timeline').value;
+    const budget       = document.getElementById('budget').value;
+    const source       = document.getElementById('source').value;
+    const notes        = document.getElementById('notes').value.trim();
+
+    if (!vehicle && workTypes.length === 0) {
+      showError('Please fill in at least a vehicle and select the work needed.');
+      return;
+    }
+
+    // Build the prompt
+    const prompt = `You are writing a quote follow-up email for No Coast Custom Upholstery in Grand Forks, ND — a one-man custom upholstery shop run by a full-time firefighter. The business does high-quality work on cars, trucks, boats, and powersports. Website: nocoastcustomsgf.com.
+
+TONE: ${selectedTone}
+
+CUSTOMER DETAILS:
+- Name: ${customerName || 'the customer'}
+- Vehicle: ${vehicle || 'not specified'}
+- Work requested: ${workTypes.length > 0 ? workTypes.join(', ') : 'general inquiry'}
+- Condition/damage: ${condition || 'not described'}
+- Material preference: ${material || 'not specified'}
+- Timeline: ${timeline || 'not specified'}
+- Budget range stated: ${budget || 'not stated'}
+- How they found us: ${source || 'unknown'}
+- Additional notes: ${notes || 'none'}
+
+PRICING REFERENCE (use as a guide — give ranges, never firm prices without inspection):
+${getPricingData()}
+
+INSTRUCTIONS:
+Write a professional quote email from Alex (owner of No Coast Custom Upholstery). The email should:
+1. Open with a warm, confident greeting using their name
+2. Confirm exactly what work they inquired about and show you understand their specific situation
+3. Provide a realistic price RANGE for the work described (reference the pricing guide above; always frame as "starting from" or "typically ranges" since final pricing requires inspection)
+4. Note that pricing is finalized after in-person or photo inspection
+5. Mention 1–2 relevant details that show craftsmanship or quality (materials, process, experience with this type of work)
+6. Ask them to confirm a good time to drop by or send detailed photos so we can lock in a firm quote
+7. Close with Alex's name and contact info placeholder: [PHONE] and nocoastcustomsgf.com
+8. Keep it under 250 words — confident and clean, not a wall of text
+9. Do NOT use generic filler phrases like "I hope this email finds you well"
+
+Output only the email text — no subject line prefix needed, no extra commentary.`;
+
+    // UI loading state
+    const btn = document.getElementById('generateBtn');
+    const btnText = document.getElementById('btnText');
+    btn.disabled = true;
+    btnText.innerHTML = '<div class="spinner"></div>';
+    document.getElementById('emptyState').style.display = 'none';
+    document.getElementById('emailOutput').style.display = 'none';
+    document.getElementById('errorMsg').style.display = 'none';
+    document.getElementById('copyBtn').style.display = 'none';
+    document.getElementById('clearBtn').style.display = 'none';
+    setStatus('active', 'Generating quote...');
+
+    try {
+      const response = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-api-key': apiKey,
+          'anthropic-version': '2023-06-01',
+          'anthropic-dangerous-direct-browser-access': 'true'
+        },
+        body: JSON.stringify({
+          model: 'claude-sonnet-4-20250514',
+          max_tokens: 1000,
+          messages: [{ role: 'user', content: prompt }]
+        })
+      });
+
+      if (!response.ok) {
+        const err = await response.json().catch(() => ({}));
+        throw new Error(err?.error?.message || `API error ${response.status}`);
+      }
+
+      const data = await response.json();
+      const text = data.content?.[0]?.text || '';
+
+      if (!text) throw new Error('Empty response from API.');
+
+      const outputEl = document.getElementById('emailOutput');
+      outputEl.textContent = text;
+      outputEl.style.display = 'block';
+      outputEl.classList.remove('fade-in');
+      void outputEl.offsetWidth;
+      outputEl.classList.add('fade-in');
+
+      document.getElementById('copyBtn').style.display = 'inline-block';
+      document.getElementById('clearBtn').style.display = 'inline-block';
+      setStatus('', `Generated — ${text.split(' ').length} words`);
+
+    } catch (err) {
+      showError(err.message || 'Something went wrong. Check your API key and try again.');
+    } finally {
+      btn.disabled = false;
+      btnText.textContent = 'Generate Quote Email';
+    }
+  }
+
+  // ── Copy ───────────────────────────────────────────────────────────────────
+  async function copyOutput() {
+    const text = document.getElementById('emailOutput').textContent;
+    await navigator.clipboard.writeText(text).catch(() => {});
+    const btn = document.getElementById('copyBtn');
+    btn.textContent = 'Copied ✓';
+    btn.classList.add('copied');
+    setTimeout(() => { btn.textContent = 'Copy Email'; btn.classList.remove('copied'); }, 2000);
+  }
+
+  // ── Clear ──────────────────────────────────────────────────────────────────
+  function clearOutput() {
+    document.getElementById('emailOutput').style.display = 'none';
+    document.getElementById('errorMsg').style.display = 'none';
+    document.getElementById('emptyState').style.display = 'block';
+    document.getElementById('copyBtn').style.display = 'none';
+    document.getElementById('clearBtn').style.display = 'none';
+    setStatus('', 'Ready');
+  }
+
+  // ── Error ──────────────────────────────────────────────────────────────────
+  function showError(msg) {
+    const el = document.getElementById('errorMsg');
+    el.textContent = '⚠ ' + msg;
+    el.style.display = 'block';
+    el.classList.remove('fade-in');
+    void el.offsetWidth;
+    el.classList.add('fade-in');
+    document.getElementById('emptyState').style.display = 'none';
+    setStatus('error', 'Error — check details above');
+
+    const btn = document.getElementById('generateBtn');
+    const btnText = document.getElementById('btnText');
+    btn.disabled = false;
+    btnText.textContent = 'Generate Quote Email';
+  }
+</script>
+</body>
+</html>

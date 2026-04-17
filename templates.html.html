@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>No Coast — Message Templates</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:      #0e0e0e;
+    --surface: #161616;
+    --s2:      #1c1c1c;
+    --border:  #2a2a2a;
+    --bhi:     #3a3a3a;
+    --gold:    #d4a017;
+    --gold2:   #b8860b;
+    --text:    #e4e4e4;
+    --dim:     #888;
+    --muted:   #444;
+    --green:   #3ddc84;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'IBM Plex Sans', sans-serif;
+    min-height: 100vh;
+    padding-bottom: 60px;
+  }
+
+  header {
+    padding: 28px 32px 22px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 12px;
+  }
+
+  .brand { font-family: 'Bebas Neue', sans-serif; font-size: 2rem; color: var(--gold); letter-spacing: 0.08em; line-height: 1; }
+  .brand-sub { font-family: 'IBM Plex Mono', monospace; font-size: 0.6rem; letter-spacing: 0.2em; color: var(--muted); text-transform: uppercase; margin-top: 4px; }
+  .header-note { font-family: 'IBM Plex Mono', monospace; font-size: 0.6rem; color: var(--muted); letter-spacing: 0.1em; text-align: right; line-height: 1.7; text-transform: uppercase; }
+
+  .container { max-width: 820px; margin: 0 auto; padding: 36px 24px 0; display: flex; flex-direction: column; gap: 28px; }
+
+  /* Template card */
+  .tpl {
+    background: var(--surface);
+    border: 1px solid var(--border);
+  }
+
+  .tpl-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 20px;
+    border-bottom: 1px solid var(--border);
+    gap: 12px;
+  }
+
+  .tpl-meta { display: flex; align-items: center; gap: 14px; }
+
+  .tpl-num {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.6rem;
+    color: var(--gold);
+    line-height: 1;
+    opacity: 0.6;
+  }
+
+  .tpl-info {}
+  .tpl-title { font-size: 0.95rem; font-weight: 500; color: var(--text); }
+  .tpl-when { font-family: 'IBM Plex Mono', monospace; font-size: 0.62rem; color: var(--dim); letter-spacing: 0.1em; margin-top: 2px; }
+
+  .copy-btn {
+    background: var(--s2);
+    border: 1px solid var(--border);
+    color: var(--dim);
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.62rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    padding: 7px 14px;
+    cursor: pointer;
+    transition: all 0.12s;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+  .copy-btn:hover { border-color: var(--bhi); color: var(--text); }
+  .copy-btn.copied { background: var(--green); border-color: var(--green); color: #000; }
+
+  /* Editable fields bar */
+  .fields-bar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 12px 20px;
+    border-bottom: 1px solid var(--border);
+    background: var(--s2);
+  }
+
+  .field-item { display: flex; align-items: center; gap: 6px; }
+
+  .field-label {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.58rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--muted);
+    white-space: nowrap;
+  }
+
+  .field-input {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.72rem;
+    padding: 4px 8px;
+    outline: none;
+    width: 130px;
+    transition: border-color 0.12s;
+  }
+  .field-input:focus { border-color: var(--gold); }
+  .field-input.wide { width: 180px; }
+
+  /* Template body */
+  .tpl-body { padding: 20px 24px; }
+
+  .tpl-text {
+    white-space: pre-wrap;
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-size: 0.88rem;
+    line-height: 1.8;
+    color: var(--text);
+    background: var(--bg);
+    border: 1px solid var(--border);
+    padding: 20px 22px;
+  }
+
+  /* Highlight placeholders */
+  .tpl-text .ph {
+    color: var(--gold);
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.82rem;
+  }
+
+  /* Tips */
+  .tip {
+    margin-top: 12px;
+    padding: 10px 14px;
+    border-left: 2px solid var(--gold2);
+    background: rgba(212,160,23,0.05);
+  }
+
+  .tip-text {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.65rem;
+    letter-spacing: 0.06em;
+    color: var(--dim);
+    line-height: 1.6;
+  }
+
+  .tip-text strong { color: var(--gold); font-weight: 500; }
+
+  /* Usage guide at top */
+  .guide {
+    background: var(--s2);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--gold);
+    padding: 16px 20px;
+    display: flex;
+    gap: 16px;
+    align-items: flex-start;
+  }
+
+  .guide-icon { font-size: 1.2rem; flex-shrink: 0; margin-top: 2px; }
+
+  .guide-text {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.68rem;
+    line-height: 1.8;
+    color: var(--dim);
+    letter-spacing: 0.04em;
+  }
+
+  .guide-text strong { color: var(--text); }
+</style>
+</head>
+<body>
+
+<header>
+  <div>
+    <div class="brand">No Coast Customs</div>
+    <div class="brand-sub">Message Templates — v1.0</div>
+  </div>
+  <div class="header-note">
+    Grand Forks, ND<br>
+    nocoastcustomsgf.com
+  </div>
+</header>
+
+<div class="container">
+
+  <div class="guide">
+    <div class="guide-icon">⚡</div>
+    <div class="guide-text">
+      <strong>How to use:</strong> Fill in the yellow fields for each message, hit Copy, paste into text or email. Takes 20 seconds.<br>
+      All templates use your real voice — tweak any line to make it yours. These are starting points, not scripts.
+    </div>
+  </div>
+
+  <!-- ── Template 1: Confirmation ── -->
+  <div class="tpl" id="tpl1">
+    <div class="tpl-header">
+      <div class="tpl-meta">
+        <span class="tpl-num">01</span>
+        <div class="tpl-info">
+          <div class="tpl-title">Lead Confirmation</div>
+          <div class="tpl-when">Send within 1 hour of receiving an inquiry</div>
+        </div>
+      </div>
+      <button class="copy-btn" onclick="copyTemplate('tpl1')">Copy Message</button>
+    </div>
+    <div class="fields-bar">
+      <div class="field-item">
+        <span class="field-label">First Name</span>
+        <input class="field-input" data-key="NAME1" placeholder="Mike" oninput="renderAll()">
+      </div>
+      <div class="field-item">
+        <span class="field-label">Vehicle</span>
+        <input class="field-input wide" data-key="VEHICLE1" placeholder="2010 F-150" oninput="renderAll()">
+      </div>
+      <div class="field-item">
+        <span class="field-label">Your Phone</span>
+        <input class="field-input" data-key="PHONE1" placeholder="701-xxx-xxxx" oninput="renderAll()">
+      </div>
+    </div>
+    <div class="tpl-body">
+      <div class="tpl-text" id="tpl1-text"></div>
+      <div class="tip">
+        <div class="tip-text">
+          <strong>Goal:</strong> Confirm fast, set expectations, show you're professional. Most shops take days to respond — this alone sets you apart.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Template 2: Quote Delivery ── -->
+  <div class="tpl" id="tpl2">
+    <div class="tpl-header">
+      <div class="tpl-meta">
+        <span class="tpl-num">02</span>
+        <div class="tpl-info">
+          <div class="tpl-title">Quote Delivery</div>
+          <div class="tpl-when">Send after generating quote — use with the Quote Generator tool</div>
+        </div>
+      </div>
+      <button class="copy-btn" onclick="copyTemplate('tpl2')">Copy Message</button>
+    </div>
+    <div class="fields-bar">
+      <div class="field-item">
+        <span class="field-label">First Name</span>
+        <input class="field-input" data-key="NAME2" placeholder="Mike" oninput="renderAll()">
+      </div>
+      <div class="field-item">
+        <span class="field-label">Work Summary</span>
+        <input class="field-input wide" data-key="WORK2" placeholder="seat restoration" oninput="renderAll()">
+      </div>
+      <div class="field-item">
+        <span class="field-label">Price Range</span>
+        <input class="field-input" data-key="PRICE2" placeholder="$400–650" oninput="renderAll()">
+      </div>
+      <div class="field-item">
+        <span class="field-label">Your Phone</span>
+        <input class="field-input" data-key="PHONE2" placeholder="701-xxx-xxxx" oninput="renderAll()">
+      </div>
+    </div>
+    <div class="tpl-body">
+      <div class="tpl-text" id="tpl2-text"></div>
+      <div class="tip">
+        <div class="tip-text">
+          <strong>Note:</strong> This is the short version for text/DM. For email, paste the full output from the Quote Generator instead — it goes deeper on scope and materials.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Template 3: Job Complete ── -->
+  <div class="tpl" id="tpl3">
+    <div class="tpl-header">
+      <div class="tpl-meta">
+        <span class="tpl-num">03</span>
+        <div class="tpl-info">
+          <div class="tpl-title">Job Complete — Pickup Ready</div>
+          <div class="tpl-when">Send when work is finished and vehicle is ready</div>
+        </div>
+      </div>
+      <button class="copy-btn" onclick="copyTemplate('tpl3')">Copy Message</button>
+    </div>
+    <div class="fields-bar">
+      <div class="field-item">
+        <span class="field-label">First Name</span>
+        <input class="field-input" data-key="NAME3" placeholder="Mike" oninput="renderAll()">
+      </div>
+      <div class="field-item">
+        <span class="field-label">Vehicle</span>
+        <input class="field-input wide" data-key="VEHICLE3" placeholder="2010 F-150" oninput="renderAll()">
+      </div>
+      <div class="field-item">
+        <span class="field-label">Balance Due</span>
+        <input class="field-input" data-key="BALANCE3" placeholder="$350" oninput="renderAll()">
+      </div>
+      <div class="field-item">
+        <span class="field-label">Your Phone</span>
+        <input class="field-input" data-key="PHONE3" placeholder="701-xxx-xxxx" oninput="renderAll()">
+      </div>
+    </div>
+    <div class="tpl-body">
+      <div class="tpl-text" id="tpl3-text"></div>
+      <div class="tip">
+        <div class="tip-text">
+          <strong>Tip:</strong> Take a final photo before they pick up. Text it with this message. That photo = your next Instagram post.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Template 4: Review Request ── -->
+  <div class="tpl" id="tpl4">
+    <div class="tpl-header">
+      <div class="tpl-meta">
+        <span class="tpl-num">04</span>
+        <div class="tpl-info">
+          <div class="tpl-title">Review Request</div>
+          <div class="tpl-when">Send 1–2 days after pickup — while the excitement is fresh</div>
+        </div>
+      </div>
+      <button class="copy-btn" onclick="copyTemplate('tpl4')">Copy Message</button>
+    </div>
+    <div class="fields-bar">
+      <div class="field-item">
+        <span class="field-label">First Name</span>
+        <input class="field-input" data-key="NAME4" placeholder="Mike" oninput="renderAll()">
+      </div>
+      <div class="field-item">
+        <span class="field-label">Work Done</span>
+        <input class="field-input wide" data-key="WORK4" placeholder="the seat restoration" oninput="renderAll()">
+      </div>
+    </div>
+    <div class="tpl-body">
+      <div class="tpl-text" id="tpl4-text"></div>
+      <div class="tip">
+        <div class="tip-text">
+          <strong>Why this works:</strong> Short, personal, no pressure. One sentence ask. Direct link removes all friction — they don't have to search.<br>
+          <strong>Add your Google review link</strong> where indicated. Get it from your Google Business Profile → "Get more reviews."
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /container -->
+
+<script>
+const TEMPLATES = {
+  tpl1: (v) =>
+`Hey ${v.NAME1 || '[Name]'} — got your message about the ${v.VEHICLE1 || '[vehicle]'}. Appreciate you reaching out.
+
+I'll take a look at what you described and get back to you with a quote shortly. If you have photos of the damage or areas you want worked on, send them my way — helps me give you a more accurate number.
+
+I run by appointment, so once we land on a price that works, we'll get you scheduled.
+
+— Alex
+No Coast Custom Upholstery
+${v.PHONE1 || '[your phone]'} | nocoastcustomsgf.com`,
+
+  tpl2: (v) =>
+`Hey ${v.NAME2 || '[Name]'} — here's what I'm looking at for your ${v.WORK2 || '[work]'}:
+
+Estimated range: ${v.PRICE2 || '[price range]'}
+
+That's based on what you described. Final number gets locked in once I can see it in person or get detailed photos — sometimes it comes in at the low end, sometimes there's more to it.
+
+To move forward, just reply here or give me a call and we'll set up a time to drop it off.
+
+— Alex
+${v.PHONE2 || '[your phone]'} | nocoastcustomsgf.com`,
+
+  tpl3: (v) =>
+`Good news — the ${v.VEHICLE3 || '[vehicle]'} is done and ready for pickup, ${v.NAME3 || '[Name]'}.
+
+Turned out great. You're going to be happy with it.
+
+Balance due at pickup: ${v.BALANCE3 || '[amount]'}
+(Cash, Venmo, or card all work)
+
+Just let me know what day/time works and I'll have it ready for you.
+
+— Alex
+${v.PHONE3 || '[your phone]'}`,
+
+  tpl4: (v) =>
+`Hey ${v.NAME4 || '[Name]'} — hope you're loving ${v.WORK4 || '[the work]'}.
+
+If you have a minute, a Google review would mean a lot. Helps other folks find the shop.
+
+[YOUR GOOGLE REVIEW LINK]
+
+Appreciate the business. Send anyone my way if you know someone who needs interior work done.
+
+— Alex`
+};
+
+function getVars(tplId) {
+  const inputs = document.querySelectorAll(`#${tplId} [data-key]`);
+  const vars = {};
+  inputs.forEach(el => { vars[el.dataset.key] = el.value.trim(); });
+  return vars;
+}
+
+function renderTemplate(tplId) {
+  const vars = getVars(tplId);
+  const fn   = TEMPLATES[tplId];
+  if (!fn) return;
+
+  const raw  = fn(vars);
+  const el   = document.getElementById(`${tplId}-text`);
+
+  // Highlight unfilled placeholders
+  const html = raw
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    .replace(/\[([^\]]+)\]/g, '<span class="ph">[$1]</span>');
+
+  el.innerHTML = html;
+}
+
+function renderAll() {
+  ['tpl1','tpl2','tpl3','tpl4'].forEach(renderTemplate);
+}
+
+async function copyTemplate(tplId) {
+  const vars = getVars(tplId);
+  const text = TEMPLATES[tplId](vars);
+  await navigator.clipboard.writeText(text).catch(() => {});
+  const btn = document.querySelector(`#${tplId} .copy-btn`);
+  btn.textContent = 'Copied ✓';
+  btn.classList.add('copied');
+  setTimeout(() => { btn.textContent = 'Copy Message'; btn.classList.remove('copied'); }, 2000);
+}
+
+// Init
+renderAll();
+</script>
+</body>
+</html>

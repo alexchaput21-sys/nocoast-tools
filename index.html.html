@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>No Coast — Tools</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0e0e0e; --surface: #161616; --border: #2a2a2a;
+    --gold: #d4a017; --text: #e4e4e4; --dim: #666; --muted: #333;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg); color: var(--text);
+    font-family: 'IBM Plex Sans', sans-serif;
+    min-height: 100vh;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    padding: 40px 24px;
+  }
+  .logo {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 2.6rem; letter-spacing: 0.1em;
+    color: var(--gold); text-align: center; line-height: 1;
+  }
+  .sub {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.6rem; letter-spacing: 0.22em;
+    color: var(--dim); text-transform: uppercase;
+    text-align: center; margin-top: 6px; margin-bottom: 48px;
+  }
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 16px; width: 100%; max-width: 740px;
+  }
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    padding: 28px 24px;
+    text-decoration: none;
+    display: flex; flex-direction: column; gap: 10px;
+    transition: all 0.15s;
+  }
+  .card:hover { border-color: var(--gold); transform: translateY(-2px); }
+  .card-num {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.4rem; color: var(--gold); opacity: 0.5; line-height: 1;
+  }
+  .card-title {
+    font-size: 1rem; font-weight: 500; color: var(--text);
+  }
+  .card-desc {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.65rem; letter-spacing: 0.06em;
+    color: var(--dim); line-height: 1.6;
+  }
+  .card-arrow {
+    font-size: 0.8rem; color: var(--gold);
+    margin-top: auto; padding-top: 10px;
+  }
+  .footer {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.58rem; letter-spacing: 0.14em;
+    color: var(--muted); text-transform: uppercase;
+    text-align: center; margin-top: 40px;
+  }
+</style>
+</head>
+<body>
+  <div class="logo">No Coast Customs</div>
+  <div class="sub">Internal Tools — Grand Forks, ND</div>
+
+  <div class="grid">
+    <a class="card" href="crm.html">
+      <span class="card-num">01</span>
+      <span class="card-title">CRM Pipeline</span>
+      <span class="card-desc">Track every lead from inquiry to review. Full pipeline view.</span>
+      <span class="card-arrow">→ Open CRM</span>
+    </a>
+    <a class="card" href="quote-generator.html">
+      <span class="card-num">02</span>
+      <span class="card-title">Quote Generator</span>
+      <span class="card-desc">AI-written quote emails in under 60 seconds.</span>
+      <span class="card-arrow">→ Generate Quote</span>
+    </a>
+    <a class="card" href="templates.html">
+      <span class="card-num">03</span>
+      <span class="card-title">Message Templates</span>
+      <span class="card-desc">4 core messages — confirm, quote, complete, review ask.</span>
+      <span class="card-arrow">→ Open Templates</span>
+    </a>
+  </div>
+
+  <div class="footer">nocoastcustomsgf.com &nbsp;·&nbsp; By Appointment Only</div>
+</body>
+</html>
