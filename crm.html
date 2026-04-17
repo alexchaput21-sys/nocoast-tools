@@ -796,7 +796,7 @@ async function apiPost(body) {
   } else if (action === 'updateLead') {
     params.id    = body.id;
     params.field = body.field;
-    params.value = encodeURIComponent(body.value);
+    params.value = body.value;
   } else if (action === 'deleteLead') {
     params.id = body.id;
   }
@@ -1044,7 +1044,25 @@ function openDetailModal(lead) {
 async function updateStatus() {
   if (!currentLead) return;
   const newStatus = document.getElementById('detail_status').value;
-  await patchField('Status', newStatus);
+  if (newStatus === currentLead['Status']) return; // no change, skip
+  try {
+    const result = await apiPost({
+      action: 'updateLead',
+      id: currentLead['ID'],
+      field: 'Status',
+      value: newStatus
+    });
+    if (result?.success) {
+      currentLead['Status'] = newStatus;
+      closeModal('detailModal');
+      await loadLeads();
+      showToast('Moved to ' + newStatus + ' ✓');
+    } else {
+      showToast(result?.error || 'Save failed', 'error');
+    }
+  } catch(e) {
+    showToast('Error saving', 'error');
+  }
 }
 
 async function saveField(fieldName, inputId) {
