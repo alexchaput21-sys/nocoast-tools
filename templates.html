@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -308,8 +309,12 @@
         <input class="field-input wide" data-key="VEHICLE3" placeholder="2010 F-150" oninput="renderAll()">
       </div>
       <div class="field-item">
-        <span class="field-label">Balance Due</span>
-        <input class="field-input" data-key="BALANCE3" placeholder="$350" oninput="renderAll()">
+        <span class="field-label">Cash Price</span>
+        <input class="field-input" data-key="CASH3" placeholder="$350" oninput="renderAll()">
+      </div>
+      <div class="field-item">
+        <span class="field-label">Card/Venmo Price</span>
+        <input class="field-input" data-key="CARD3" placeholder="$360" oninput="renderAll()">
       </div>
       <div class="field-item">
         <span class="field-label">Your Phone</span>
@@ -391,8 +396,9 @@ ${v.PHONE2 || '[your phone]'} | nocoastcustomsgf.com`,
 
 Turned out great. You're going to be happy with it.
 
-Balance due at pickup: ${v.BALANCE3 || '[amount]'}
-(Cash, Venmo, or card all work)
+Balance due at pickup:
+Cash: ${v.CASH3 || '[cash price]'}
+Card or Venmo: ${v.CARD3 || '[card/venmo price]'}
 
 Just let me know what day/time works and I'll have it ready for you.
 
