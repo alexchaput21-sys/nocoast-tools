@@ -18,14 +18,14 @@
   --text-dim:  #7a7c82;
   --text-muted:#434548;
 
-  --s-new:     #2563eb;
-  --s-quoted:  #ca8a04;
-  --s-deposit: #16a34a;
-  --s-wip:     #ea580c;
-  --s-pickup:  #0e7490;
-  --s-done:    #15803d;
-  --s-review:  #7c3aed;
-  --s-lost:    #525252;
+  --s-new:       #2563eb;
+  --s-quoted:    #ca8a04;
+  --s-scheduled: #7c3aed;
+  --s-deposit:   #16a34a;
+  --s-wip:       #ea580c;
+  --s-pickup:    #0e7490;
+  --s-done:      #15803d;
+  --s-closed:    #525252;
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -196,23 +196,23 @@ body {
 }
 
 /* Status colors */
-.col-new    { border-color: var(--s-new);    background: rgba(37,99,235,0.06); }
-.col-quoted { border-color: var(--s-quoted); background: rgba(202,138,4,0.06); }
-.col-deposit{ border-color: var(--s-deposit);background: rgba(22,163,74,0.06); }
-.col-wip    { border-color: var(--s-wip);    background: rgba(234,88,12,0.06); }
-.col-pickup { border-color: var(--s-pickup); background: rgba(14,116,144,0.06); }
-.col-done   { border-color: var(--s-done);   background: rgba(21,128,61,0.06); }
-.col-review { border-color: var(--s-review); background: rgba(124,58,237,0.06); }
-.col-lost   { border-color: var(--s-lost);   background: rgba(82,82,82,0.06); }
+.col-new       { border-color: var(--s-new);       background: rgba(37,99,235,0.06); }
+.col-quoted    { border-color: var(--s-quoted);    background: rgba(202,138,4,0.06); }
+.col-scheduled { border-color: var(--s-scheduled); background: rgba(124,58,237,0.06); }
+.col-deposit   { border-color: var(--s-deposit);   background: rgba(22,163,74,0.06); }
+.col-wip       { border-color: var(--s-wip);       background: rgba(234,88,12,0.06); }
+.col-pickup    { border-color: var(--s-pickup);    background: rgba(14,116,144,0.06); }
+.col-done      { border-color: var(--s-done);      background: rgba(21,128,61,0.06); }
+.col-closed    { border-color: var(--s-closed);    background: rgba(82,82,82,0.06); }
 
-.col-new    .col-title { color: #60a5fa; }
-.col-quoted .col-title { color: #fbbf24; }
-.col-deposit .col-title{ color: #4ade80; }
-.col-wip    .col-title { color: #fb923c; }
-.col-pickup .col-title { color: #22d3ee; }
-.col-done   .col-title { color: #4ade80; }
-.col-review .col-title { color: #a78bfa; }
-.col-lost   .col-title { color: #737373; }
+.col-new       .col-title { color: #60a5fa; }
+.col-quoted    .col-title { color: #fbbf24; }
+.col-scheduled .col-title { color: #a78bfa; }
+.col-deposit   .col-title { color: #4ade80; }
+.col-wip       .col-title { color: #fb923c; }
+.col-pickup    .col-title { color: #22d3ee; }
+.col-done      .col-title { color: #4ade80; }
+.col-closed    .col-title { color: #737373; }
 
 /* ── Cards ── */
 .cards { display: flex; flex-direction: column; gap: 8px; min-height: 60px; }
@@ -638,7 +638,7 @@ body {
     <span class="stat-value gold" id="statPipeline">—</span>
   </div>
   <div class="stat-cell">
-    <span class="stat-label">Need Review Ask</span>
+    <span class="stat-label">Scheduled</span>
     <span class="stat-value purple" id="statReview">—</span>
   </div>
   <div class="stat-cell">
@@ -683,6 +683,7 @@ body {
           <label>Source</label>
           <select id="add_source">
             <option value="">— Unknown —</option>
+            <option>Phone Call</option>
             <option>Google Search</option>
             <option>Instagram</option>
             <option>Facebook</option>
@@ -696,12 +697,12 @@ body {
           <select id="add_status">
             <option>New Lead</option>
             <option>Quoted</option>
+            <option>Scheduled</option>
             <option>Deposit Paid</option>
             <option>In Progress</option>
             <option>Ready for Pickup</option>
             <option>Complete</option>
-            <option>Review Requested</option>
-            <option>Closed / Lost</option>
+            <option>Closed</option>
           </select>
         </div>
         <div class="field">
@@ -746,14 +747,14 @@ let leads = [];
 let currentLead = null;
 
 const STATUSES = [
-  { key: 'New Lead',          cls: 'col-new',     col: '--s-new' },
-  { key: 'Quoted',            cls: 'col-quoted',  col: '--s-quoted' },
-  { key: 'Deposit Paid',      cls: 'col-deposit', col: '--s-deposit' },
-  { key: 'In Progress',       cls: 'col-wip',     col: '--s-wip' },
-  { key: 'Ready for Pickup',  cls: 'col-pickup',  col: '--s-pickup' },
-  { key: 'Complete',          cls: 'col-done',    col: '--s-done' },
-  { key: 'Review Requested',  cls: 'col-review',  col: '--s-review' },
-  { key: 'Closed / Lost',     cls: 'col-lost',    col: '--s-lost' }
+  { key: 'New Lead',         cls: 'col-new',       col: '--s-new' },
+  { key: 'Quoted',           cls: 'col-quoted',    col: '--s-quoted' },
+  { key: 'Scheduled',        cls: 'col-scheduled', col: '--s-scheduled' },
+  { key: 'Deposit Paid',     cls: 'col-deposit',   col: '--s-deposit' },
+  { key: 'In Progress',      cls: 'col-wip',       col: '--s-wip' },
+  { key: 'Ready for Pickup', cls: 'col-pickup',    col: '--s-pickup' },
+  { key: 'Complete',         cls: 'col-done',      col: '--s-done' },
+  { key: 'Closed',           cls: 'col-closed',    col: '--s-closed' }
 ];
 
 // ── Init ───────────────────────────────────────────────────
@@ -835,7 +836,7 @@ function calcStats(allLeads) {
     const status = lead['Status'] || 'New Lead';
     stats.byStatus[status] = (stats.byStatus[status] || 0) + 1;
     if (['Deposit Paid','In Progress','Ready for Pickup'].includes(status)) stats.activeJobs++;
-    if (status === 'Complete' && lead['Review Req.'] !== 'Y') stats.needsReview++;
+    if (status === 'Scheduled') stats.needsReview++;
     const val  = String(lead['Est. Value'] || '');
     const nums = val.match(/\d[\d,]*/g);
     if (nums) {
@@ -1123,9 +1124,9 @@ function updateStats(stats) {
 // ── Helpers ────────────────────────────────────────────────
 function getStatusColor(status) {
   const map = {
-    'New Lead': '#2563eb', 'Quoted': '#ca8a04', 'Deposit Paid': '#16a34a',
-    'In Progress': '#ea580c', 'Ready for Pickup': '#0e7490', 'Complete': '#15803d',
-    'Review Requested': '#7c3aed', 'Closed / Lost': '#525252'
+    'New Lead': '#2563eb', 'Quoted': '#ca8a04', 'Scheduled': '#7c3aed',
+    'Deposit Paid': '#16a34a', 'In Progress': '#ea580c', 'Ready for Pickup': '#0e7490',
+    'Complete': '#15803d', 'Closed': '#525252'
   };
   return map[status] || '#525252';
 }
