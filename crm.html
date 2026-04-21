@@ -833,7 +833,7 @@ async function loadLeads() {
 function calcStats(allLeads) {
   const stats = { total: allLeads.length, byStatus: {}, pipelineValue: 0, activeJobs: 0, needsReview: 0 };
   allLeads.forEach(lead => {
-    const status = lead['Status'] || 'New Lead';
+    const status = normalizeStatus(lead['Status']);
     stats.byStatus[status] = (stats.byStatus[status] || 0) + 1;
     if (['Deposit Paid','In Progress','Ready for Pickup'].includes(status)) stats.activeJobs++;
     if (status === 'Scheduled') stats.needsReview++;
@@ -847,13 +847,22 @@ function calcStats(allLeads) {
   return stats;
 }
 
+// ── Normalize legacy statuses ──────────────────────────────
+function normalizeStatus(status) {
+  const legacy = {
+    'Review Requested': 'Closed',
+    'Closed / Lost':    'Closed'
+  };
+  return legacy[status] || status || 'New Lead';
+}
+
 // ── Render pipeline ────────────────────────────────────────
 function renderPipeline(allLeads) {
   const pipeline = document.getElementById('pipeline');
   pipeline.innerHTML = '';
 
   STATUSES.forEach(({ key, cls }) => {
-    const colLeads = allLeads.filter(l => (l['Status'] || 'New Lead') === key);
+    const colLeads = allLeads.filter(l => normalizeStatus(l['Status']) === key);
     const col = document.createElement('div');
     col.className = 'pipeline-col';
 
@@ -968,7 +977,7 @@ function openDetailModal(lead) {
     <div class="detail-status-row">
       <span class="detail-status-label">Status</span>
       <select class="status-select" id="detail_status" onchange="updateStatus()">
-        ${STATUSES.map(s => `<option ${s.key === lead['Status'] ? 'selected' : ''}>${s.key}</option>`).join('')}
+        ${STATUSES.map(s => `<option ${s.key === normalizeStatus(lead['Status']) ? 'selected' : ''}>${s.key}</option>`).join('')}
       </select>
     </div>
 
