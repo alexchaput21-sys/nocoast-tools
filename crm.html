@@ -581,6 +581,22 @@ body {
   to   { opacity: 1; transform: translateX(0); }
 }
 
+/* Materials Orders in detail modal */
+.orders-section { border-top: 1px solid var(--border); padding: 14px 20px; }
+.orders-section-hdr { display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; }
+.orders-section-title { font-family:'DM Mono',monospace; font-size:.6rem; letter-spacing:.14em; text-transform:uppercase; color:var(--text-muted); }
+.orders-link { font-family:'DM Mono',monospace; font-size:.6rem; color:var(--gold); text-decoration:none; letter-spacing:.06em; }
+.orders-link:hover { text-decoration:underline; }
+.order-cost-row { display:flex; justify-content:space-between; align-items:center; padding:5px 0; border-bottom:1px solid var(--border); }
+.order-cost-row:last-of-type { border-bottom:none; }
+.order-cost-vendor { font-size:.8rem; font-weight:500; color:var(--text); }
+.order-cost-num { font-size:.65rem; color:var(--text-dim); }
+.order-cost-amt { font-family:'DM Mono',monospace; font-size:.72rem; }
+.orders-total { display:flex; justify-content:space-between; align-items:flex-end; margin-top:10px; padding-top:8px; border-top:1px solid var(--gold-dim); }
+.orders-total-lbl { font-family:'DM Mono',monospace; font-size:.62rem; color:var(--text-muted); }
+.orders-total-val { font-family:'Bebas Neue',sans-serif; font-size:1.4rem; color:var(--gold); line-height:1; }
+.orders-total-sub { font-family:'DM Mono',monospace; font-size:.58rem; color:var(--text-muted); text-align:right; margin-top:1px; }
+
 /* Scrollbar */
 ::-webkit-scrollbar { width: 6px; height: 6px; }
 ::-webkit-scrollbar-track { background: var(--bg); }
@@ -1051,12 +1067,21 @@ function openDetailModal(lead) {
       </div>
     </div>
 
+    <div class="orders-section">
+      <div class="orders-section-hdr">
+        <span class="orders-section-title">Materials Orders</span>
+        <a href="orders.html" target="_blank" class="orders-link">→ Order Tracker</a>
+      </div>
+      <div id="leadOrders"><span style="font-family:'DM Mono',monospace;font-size:.65rem;color:var(--text-muted);">Loading…</span></div>
+    </div>
+
     <div class="modal-footer">
       <button class="delete-btn" onclick="deleteLead()">Delete Lead</button>
       <button class="btn" onclick="closeModal('detailModal')">Close</button>
     </div>`;
 
   openModal('detailModal');
+  loadOrdersForLead(lead);
 }
 
 async function updateStatus() {
@@ -1106,6 +1131,92 @@ async function patchField(field, value) {
     }
   } catch (e) {
     showToast('Error saving', 'error');
+  }
+}
+
+async function loadOrdersForLead(lead) {
+  const el = document.getElementById('leadOrders');
+  if (!el || !getUrl()) {
+    el.innerHTML = '<span style="font-family:\'DM Mono\',monospace;font-size:.65rem;color:var(--text-muted);">Paste your Apps Script URL to see orders.</span>';
+    return;
+  }
+  try {
+    const orders = await apiFetch({ action: 'getOrders' });
+    if (!orders || orders.error || !Array.isArray(orders)) {
+      el.innerHTML = '<span style="font-family:\'DM Mono\',monospace;font-size:.65rem;color:var(--text-muted);">No orders data available.</span>';
+      return;
+    }
+
+    const name    = lead['Customer Name'] || '';
+    const vehicle = lead['Vehicle'] || '';
+    const leadKey = name + (vehicle ? ' \u2014 ' + vehicle : '');
+
+    // Match orders assigned to this customer (including splits)
+    const matched = orders.filter(o => {
+      const a = o['CustomerAssignment'] || '';
+      if (a === leadKey) return true;
+      if (a.startsWith('SPLIT:')) {
+        try { return JSON.parse(a.slice(6)).splits.some(s => s.c === leadKey); }
+        catch(e) { return false; }
+      }
+      return false;
+    }).filter(o => (o['Status'] || '').toLowerCase() !== 'not_used');
+
+    if (!matched.length) {
+      el.innerHTML = '<span style="font-family:\'DM Mono\',monospace;font-size:.65rem;color:var(--text-muted);">No orders assigned to this customer yet.</span>';
+      return;
+    }
+
+    const STATUS_COLOR = { delivered:'#22c55e', shipped:'#3b82f6', transit:'#f97316', processing:'#a855f7', invoiced:'#c9951a' };
+    const STATUS_LBL   = { delivered:'✅ Delivered', shipped:'📦 Shipped', transit:'🚚 Transit', processing:'🕐 Processing', invoiced:'🧾 Invoiced' };
+
+    let totalConfirmed = 0, unknownCount = 0;
+
+    const rows = matched.map(o => {
+      const a      = o['CustomerAssignment'] || '';
+      const status = (o['Status'] || '').toLowerCase();
+      const color  = STATUS_COLOR[status] || '#888';
+      const lbl    = STATUS_LBL[status]   || status;
+      let amtHtml;
+
+      if (a.startsWith('SPLIT:')) {
+        try {
+          const split = JSON.parse(a.slice(6)).splits.find(s => s.c === leadKey);
+          const n = Number(split.a) || 0;
+          totalConfirmed += n;
+          amtHtml = `<span class="order-cost-amt" style="color:var(--gold);">$${n.toFixed(2)}</span> <span style="font-size:.58rem;opacity:.6;">(split)</span>`;
+        } catch(e) { amtHtml = '<span class="order-cost-amt" style="opacity:.5;font-style:italic;">—</span>'; }
+      } else {
+        const amt = parseFloat(o['Amount'] || '');
+        if (!isNaN(amt) && amt > 0) {
+          totalConfirmed += amt;
+          amtHtml = `<span class="order-cost-amt" style="color:var(--gold);">$${amt.toFixed(2)}</span>`;
+        } else {
+          unknownCount++;
+          amtHtml = `<span class="order-cost-amt" style="opacity:.5;font-style:italic;">See invoice</span>`;
+        }
+      }
+
+      return `<div class="order-cost-row">
+        <div>
+          <div class="order-cost-vendor">${esc(o['Vendor'] || '')} <span class="order-cost-num">${esc(o['OrderNum'] || '')}</span></div>
+          <div>${amtHtml}</div>
+        </div>
+        <span style="font-family:'DM Mono',monospace;font-size:.6rem;color:${color};">${lbl}</span>
+      </div>`;
+    }).join('');
+
+    const totalHtml = `<div class="orders-total">
+      <span class="orders-total-lbl">Total materials cost</span>
+      <div>
+        <div class="orders-total-val">$${totalConfirmed.toFixed(2)}</div>
+        ${unknownCount ? `<div class="orders-total-sub">+ ${unknownCount} see invoice</div>` : ''}
+      </div>
+    </div>`;
+
+    el.innerHTML = rows + totalHtml;
+  } catch(e) {
+    el.innerHTML = '<span style="font-family:\'DM Mono\',monospace;font-size:.65rem;color:#f87171;">Error loading orders.</span>';
   }
 }
 
