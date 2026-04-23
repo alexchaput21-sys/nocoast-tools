@@ -76,6 +76,24 @@ tbody td{padding:8px 10px;vertical-align:middle;font-size:.82rem;}
 .act-btn.del:hover{border-color:rgba(239,68,68,.4);color:#f87171;}
 .act-btn.unused:hover{border-color:rgba(100,100,100,.5);color:var(--text-dim);}
 .not-used-row td{opacity:.45;}
+.split-badge{display:inline-flex;align-items:center;gap:3px;padding:2px 8px;font-family:'DM Mono',monospace;font-size:.6rem;letter-spacing:.06em;border:1px solid rgba(139,92,246,.4);background:rgba(139,92,246,.08);color:#a78bfa;white-space:nowrap;margin-bottom:3px;}
+.split-list{font-size:.65rem;color:var(--text-dim);line-height:1.7;}
+.split-modal-ov{position:fixed;inset:0;background:rgba(0,0,0,.75);display:none;align-items:center;justify-content:center;z-index:600;padding:16px;}
+.split-modal-ov.open{display:flex;}
+.split-modal{background:var(--surface);border:1px solid var(--border);width:100%;max-width:480px;max-height:90vh;overflow-y:auto;}
+.split-mh{display:flex;align-items:center;justify-content:space-between;padding:13px 18px;border-bottom:1px solid var(--border);position:sticky;top:0;background:var(--surface);}
+.split-mtitle{font-family:'Bebas Neue',sans-serif;font-size:1.15rem;color:var(--gold);}
+.split-tbar{padding:9px 18px;background:var(--surface2);border-bottom:1px solid var(--border);font-family:'DM Mono',monospace;font-size:.68rem;display:flex;justify-content:space-between;color:var(--text-dim);}
+.split-rows{padding:12px 18px;display:flex;flex-direction:column;gap:8px;}
+.split-row{display:flex;gap:7px;align-items:center;}
+.split-row select{flex:1;background:var(--bg);border:1px solid var(--border);color:var(--text);font-family:'DM Mono',monospace;font-size:.63rem;padding:6px 7px;outline:none;cursor:pointer;min-width:0;}
+.split-row select:focus{border-color:var(--gold);}
+.split-row input{width:82px;background:var(--bg);border:1px solid var(--border);color:var(--text);font-family:'DM Mono',monospace;font-size:.72rem;padding:6px 7px;outline:none;flex-shrink:0;}
+.split-row input:focus{border-color:var(--gold);}
+.split-row .rm{background:none;border:1px solid var(--border);color:var(--text-muted);font-size:.75rem;padding:4px 8px;cursor:pointer;transition:all .1s;flex-shrink:0;}
+.split-row .rm:hover{border-color:rgba(239,68,68,.4);color:#f87171;}
+.split-rem{padding:9px 18px;font-family:'DM Mono',monospace;font-size:.68rem;display:flex;justify-content:space-between;border-top:1px solid var(--border);}
+.split-rem.ok{color:#34c759;} .split-rem.over{color:#ff3b30;} .split-rem.under{color:var(--gold);}
 .vendor-tag{display:inline-block;padding:2px 6px;background:var(--surface2);border:1px solid var(--border);font-size:.7rem;white-space:nowrap;}
 .order-num{font-family:'DM Mono',monospace;font-size:.7rem;font-weight:500;}
 .items-cell{font-size:.75rem;color:var(--text-dim);max-width:175px;}
@@ -238,6 +256,29 @@ tbody td{padding:8px 10px;vertical-align:middle;font-size:.82rem;}
   </div>
 </div>
 
+<!-- Split Modal -->
+<div class="split-modal-ov" id="splitModal">
+  <div class="split-modal">
+    <div class="split-mh">
+      <span class="split-mtitle" id="splitTitle">Split Order</span>
+      <button onclick="closeSplitModal()" style="background:none;border:none;color:var(--text-muted);font-size:1.1rem;cursor:pointer;">✕</button>
+    </div>
+    <div class="split-tbar">
+      <span>Total: <strong id="splitTotal" style="color:var(--text)">—</strong></span>
+      <span>Enter amount per job</span>
+    </div>
+    <div class="split-rows" id="splitRows"></div>
+    <div style="padding:6px 18px 10px;">
+      <button class="btn" onclick="addSplitRow()" style="width:100%;text-align:center;">+ Add Job</button>
+    </div>
+    <div class="split-rem" id="splitRem"></div>
+    <div style="padding:11px 18px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:8px;">
+      <button class="btn" onclick="closeSplitModal()">Cancel</button>
+      <button class="btn btn-gold" onclick="saveSplits()">Save</button>
+    </div>
+  </div>
+</div>
+
 <div class="loading-overlay hidden" id="loader"><div class="spinner"></div></div>
 <div class="toast" id="toast"></div>
 
@@ -251,6 +292,7 @@ const STATUS_MAP = {
   not_used:{cls:'b-not-used',lbl:'🚫 Not Used'}
 };
 let orders = [], customers = [];
+let splitOrderId = null, splitOrderTotal = 0;
 
 window.addEventListener('DOMContentLoaded', () => {
   const saved = localStorage.getItem('nc_crm_url');
@@ -331,20 +373,31 @@ function renderOrders() {
     const hasExtra=assigned&&!customers.some(c=>c.name+(c.vehicle?` — ${c.vehicle}`:'')=== assigned);
     const isUnused = status==='not_used';
     const unusedLbl = isUnused ? 'Restore' : '🚫 Unused';
+    // Split handling
+    const hasSplits = assigned.startsWith('SPLIT:');
+    let assignCell;
+    if (hasSplits) {
+      const sd = tryParseJson(assigned.slice(6),{splits:[]});
+      const splitLines = (sd.splits||[]).map(s=>`<div>${esc(s.c)}: <span style="color:var(--gold);font-family:'DM Mono',monospace;">$${Number(s.a).toFixed(2)}</span></div>`).join('');
+      assignCell = `<div><span class="split-badge">÷ SPLIT</span><div class="split-list">${splitLines}</div></div>`;
+    } else {
+      assignCell = `<select class="assign-sel${assigned?' has-value':''}" data-id="${esc(id)}" onchange="saveAssignment(this,'${esc(id)}')">
+        <option value="">— Unassigned —</option>
+        ${hasExtra?`<option value="${esc(assigned)}" selected>${esc(assigned)}</option>`:''}
+        ${custOpts}
+      </select>`;
+    }
     return `<tr${isUnused?' class="not-used-row"':''}>
       <td style="color:var(--text-muted);font-size:.72rem;white-space:nowrap">${esc(date)}</td>
       <td><span class="vendor-tag">${esc(vendor)}</span></td>
       <td><span class="order-num">${esc(orderNum)}</span></td>
       <td><div class="items-cell">${itemsHtml}</div></td>
       <td>${amtHtml}</td>
-      <td><select class="assign-sel${assigned?' has-value':''}" data-id="${esc(id)}" onchange="saveAssignment(this,'${esc(id)}')">
-        <option value="">— Unassigned —</option>
-        ${hasExtra?`<option value="${esc(assigned)}" selected>${esc(assigned)}</option>`:''}
-        ${custOpts}
-      </select></td>
+      <td>${assignCell}</td>
       <td>${trackHtml||'<span class="track-plain">—</span>'}</td>
       <td><span class="badge ${sc.cls}">${sc.lbl}</span></td>
       <td><div style="display:flex;gap:4px;flex-direction:column;">
+        <button class="act-btn" onclick="openSplitModal('${esc(id)}')" title="Split cost across jobs">${hasSplits?'÷ Edit':'÷ Split'}</button>
         <button class="act-btn unused" onclick="toggleUnused('${esc(id)}')">${unusedLbl}</button>
         <button class="act-btn del" onclick="deleteOrderRow('${esc(id)}')">🗑 Delete</button>
       </div></td>
@@ -367,16 +420,37 @@ async function saveAssignment(sel,id) {
 }
 
 function renderByCustomer() {
-  const groups={};
-  orders.forEach(o=>{ const a=o['CustomerAssignment']||o.customerAssignment||'__none__'; if(!groups[a])groups[a]=[]; groups[a].push(o); });
+  const groups={}; // key→[{o,overrideAmt}]
+  orders.forEach(o=>{
+    const a=o['CustomerAssignment']||o.customerAssignment||'__none__';
+    if(a.startsWith('SPLIT:')){
+      const sd=tryParseJson(a.slice(6),{splits:[]});
+      (sd.splits||[]).forEach(s=>{
+        const k=s.c||'__none__';
+        if(!groups[k])groups[k]=[];
+        groups[k].push({o,overrideAmt:Number(s.a)||0});
+      });
+    } else {
+      if(!groups[a])groups[a]=[];
+      groups[a].push({o,overrideAmt:null});
+    }
+  });
   const keys=Object.keys(groups).sort(k=>k==='__none__'?1:-1);
   document.getElementById('custGrid').innerHTML=keys.map(k=>{
-    const list=groups[k], isNone=k==='__none__';
-    const spend=list.reduce((s,o)=>s+Math.max(0,parseFloat(o['Amount']||o.amount||'0')||0),0);
-    const unkCount=list.filter(o=>!(parseFloat(o['Amount']||o.amount||'0')>0)).length;
-    const rows=list.map(o=>{const amt=parseFloat(o['Amount']||o.amount||'0');const vendor=o['Vendor']||o.vendor||'';const num=o['OrderNum']||o.orderNum||'';return `<div class="cust-row"><span class="cust-vendor">${esc(vendor)} ${esc(num)}</span><span class="cust-amt${amt>0?'':' unk'}">${amt>0?'$'+amt.toFixed(2):'See inv.'}</span></div>`;}).join('');
+    const entries=groups[k], isNone=k==='__none__';
+    const spend=entries.reduce((s,{o,overrideAmt})=>{
+      const a=overrideAmt!==null?overrideAmt:Math.max(0,parseFloat(o['Amount']||o.amount||'0')||0);
+      return s+a;
+    },0);
+    const unkCount=entries.filter(({o,overrideAmt})=>overrideAmt===null&&!(parseFloat(o['Amount']||o.amount||'0')>0)).length;
+    const rows=entries.map(({o,overrideAmt})=>{
+      const amt=overrideAmt!==null?overrideAmt:parseFloat(o['Amount']||o.amount||'0');
+      const vendor=o['Vendor']||o.vendor||''; const num=o['OrderNum']||o.orderNum||'';
+      const isSplit=overrideAmt!==null;
+      return `<div class="cust-row"><span class="cust-vendor">${esc(vendor)} ${esc(num)}${isSplit?' <span style="color:var(--text-muted);font-size:.58rem;">(split)</span>':''}</span><span class="cust-amt${amt>0?'':' unk'}">${amt>0?'$'+amt.toFixed(2):'See inv.'}</span></div>`;
+    }).join('');
     const [name,vehicle]=k.split(' — ');
-    return `<div class="cust-card${isNone?' unassigned-card':''}"><h3>${esc(isNone?'⚠️ Unassigned':name)}</h3>${!isNone&&vehicle?`<div class="cust-vehicle">${esc(vehicle)}</div>`:`<div class="cust-vehicle">${list.length} order${list.length!==1?'s':''}</div>`}<div class="cust-spend">$${spend.toFixed(2)}</div><div class="cust-spend-sub">${spend>0?'confirmed spend':''} ${unkCount>0?`+ ${unkCount} see-invoice`:''}</div><div class="cust-orders">${rows}</div></div>`;
+    return `<div class="cust-card${isNone?' unassigned-card':''}"><h3>${esc(isNone?'⚠️ Unassigned':name)}</h3>${!isNone&&vehicle?`<div class="cust-vehicle">${esc(vehicle)}</div>`:`<div class="cust-vehicle">${entries.length} order${entries.length!==1?'s':''}</div>`}<div class="cust-spend">$${spend.toFixed(2)}</div><div class="cust-spend-sub">${spend>0?'confirmed spend':''} ${unkCount>0?`+ ${unkCount} see-invoice`:''}</div><div class="cust-orders">${rows}</div></div>`;
   }).join('')||`<div class="empty">No orders yet.</div>`;
 }
 
@@ -437,6 +511,78 @@ function setConn(state,msg){const d=document.getElementById('connDot'),t=documen
 function setLoading(on){document.getElementById('loader').classList.toggle('hidden',!on);}
 let toastTmr;
 function showToast(msg,type=''){const t=document.getElementById('toast');t.textContent=msg;t.className='toast'+(type?' '+type:'');t.style.display='block';clearTimeout(toastTmr);toastTmr=setTimeout(()=>t.style.display='none',2500);}
+// ── Split functions ───────────────────────────────────────
+function openSplitModal(id) {
+  const o=orders.find(x=>(x['ID']||x.id)===id); if(!o) return;
+  splitOrderId=id;
+  splitOrderTotal=parseFloat(o['Amount']||o.amount||0)||0;
+  document.getElementById('splitTitle').textContent=(o['Vendor']||o.vendor)+' '+(o['OrderNum']||o.orderNum);
+  document.getElementById('splitTotal').textContent=splitOrderTotal>0?'$'+splitOrderTotal.toFixed(2):'Not set';
+  document.getElementById('splitRows').innerHTML='';
+  const raw=o['CustomerAssignment']||o.customerAssignment||'';
+  if(raw.startsWith('SPLIT:')){
+    const sd=tryParseJson(raw.slice(6),{splits:[]});
+    (sd.splits||[]).forEach(s=>addSplitRow(s.c,s.a));
+  } else {
+    addSplitRow(raw||'', splitOrderTotal||'');
+    if(!raw) addSplitRow('','');
+  }
+  document.getElementById('splitModal').classList.add('open');
+  updateSplitRem();
+}
+
+function closeSplitModal(){
+  document.getElementById('splitModal').classList.remove('open');
+  splitOrderId=null;
+}
+
+function addSplitRow(customer='',amount=''){
+  const opts=customers.map(c=>{
+    const val=c.name+(c.vehicle?` — ${c.vehicle}`:'');
+    return `<option value="${esc(val)}"${val===customer?' selected':''}>${esc(c.name)}${c.vehicle?' — '+esc(c.vehicle):''}</option>`;
+  }).join('');
+  const hasExtra=customer&&!customers.some(c=>c.name+(c.vehicle?` — ${c.vehicle}`:'')=== customer);
+  const row=document.createElement('div');
+  row.className='split-row';
+  row.innerHTML=`<select onchange="updateSplitRem()"><option value="">— Select job —</option>${hasExtra?`<option value="${esc(customer)}" selected>${esc(customer)}</option>`:''}${opts}</select><input type="number" step="0.01" placeholder="$0.00" value="${amount||''}" oninput="updateSplitRem()"><button class="rm" onclick="this.closest('.split-row').remove();updateSplitRem()">×</button>`;
+  document.getElementById('splitRows').appendChild(row);
+}
+
+function updateSplitRem(){
+  const rows=document.querySelectorAll('#splitRows .split-row');
+  const alloc=Array.from(rows).reduce((s,r)=>s+(parseFloat(r.querySelector('input').value)||0),0);
+  const rem=splitOrderTotal-alloc;
+  const el=document.getElementById('splitRem');
+  if(Math.abs(rem)<0.01){
+    el.className='split-rem ok';
+    el.innerHTML=`<span>✓ Fully allocated</span><span style="color:var(--text)">$${alloc.toFixed(2)}</span>`;
+  } else if(rem>0){
+    el.className='split-rem under';
+    el.innerHTML=`<span>Remaining: $${rem.toFixed(2)}</span><span>Allocated: $${alloc.toFixed(2)}</span>`;
+  } else {
+    el.className='split-rem over';
+    el.innerHTML=`<span>⚠ Over by $${Math.abs(rem).toFixed(2)}</span><span>Allocated: $${alloc.toFixed(2)}</span>`;
+  }
+}
+
+async function saveSplits(){
+  if(!splitOrderId) return;
+  const rows=document.querySelectorAll('#splitRows .split-row');
+  const splits=Array.from(rows).map(r=>({c:r.querySelector('select').value,a:parseFloat(r.querySelector('input').value)||0})).filter(s=>s.c&&s.a>0);
+  if(!splits.length){showToast('Add at least one job with an amount','err');return;}
+  const value=splits.length===1?splits[0].c:'SPLIT:'+JSON.stringify({splits});
+  try{
+    const res=await apiFetch({action:'updateOrderField',id:splitOrderId,field:'CustomerAssignment',value});
+    if(res&&res.success){
+      const o=orders.find(x=>(x['ID']||x.id)===splitOrderId);
+      if(o){if(o['CustomerAssignment']!==undefined)o['CustomerAssignment']=value;else o.customerAssignment=value;}
+      closeSplitModal();
+      renderAll();
+      showToast(splits.length>1?`Split across ${splits.length} jobs ✓`:'Assignment saved ✓');
+    }else showToast('Save failed','err');
+  }catch(e){showToast('Error','err');}
+}
+
 function editAmount(el, id) {
   const cur = parseFloat(el.textContent.replace('$',''))||'';
   const inp = document.createElement('input');
