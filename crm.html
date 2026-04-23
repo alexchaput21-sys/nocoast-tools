@@ -39,6 +39,11 @@ body {
   overflow-x: hidden;
 }
 
+/* ── Back Button ── */
+.back-btn{color:var(--text-dim);text-decoration:none;font-family:'DM Mono',monospace;font-size:.7rem;letter-spacing:.1em;transition:color .1s;display:flex;align-items:center;gap:4px;white-space:nowrap;}
+.back-btn:hover{color:var(--gold);}
+.topbar-left{display:flex;align-items:center;gap:14px;}
+
 /* ── Top Bar ── */
 .topbar {
   display: flex;
@@ -604,9 +609,12 @@ body {
 
 <!-- Top Bar -->
 <div class="topbar">
-  <div class="logo">
-    No Coast CRM
-    <span>Customer Pipeline</span>
+  <div class="topbar-left">
+    <a href="index.html" class="back-btn">← Back</a>
+    <div class="logo">
+      No Coast CRM
+      <span>Customer Pipeline</span>
+    </div>
   </div>
   <div class="topbar-right">
     <input type="text" class="url-input" id="scriptUrl"

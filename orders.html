@@ -67,6 +67,12 @@ tbody td{padding:8px 10px;vertical-align:middle;font-size:.82rem;}
 .b-transit{background:rgba(249,115,22,.1);border-color:rgba(249,115,22,.3);color:var(--orange);}
 .b-processing{background:rgba(168,85,247,.1);border-color:rgba(168,85,247,.3);color:var(--purple);}
 .b-invoiced{background:rgba(201,149,26,.1);border-color:rgba(201,149,26,.3);color:var(--gold);}
+.b-not-used{background:rgba(100,100,100,.08);border-color:rgba(100,100,100,.25);color:var(--text-muted);text-decoration:line-through;}
+.act-btn{background:none;border:1px solid var(--border);color:var(--text-muted);font-size:.58rem;font-family:'DM Mono',monospace;padding:2px 6px;cursor:pointer;transition:all .12s;white-space:nowrap;letter-spacing:.04em;}
+.act-btn:hover{border-color:var(--border-hi);color:var(--text);}
+.act-btn.del:hover{border-color:rgba(239,68,68,.4);color:#f87171;}
+.act-btn.unused:hover{border-color:rgba(100,100,100,.5);color:var(--text-dim);}
+.not-used-row td{opacity:.45;}
 .vendor-tag{display:inline-block;padding:2px 6px;background:var(--surface2);border:1px solid var(--border);font-size:.7rem;white-space:nowrap;}
 .order-num{font-family:'DM Mono',monospace;font-size:.7rem;font-weight:500;}
 .items-cell{font-size:.75rem;color:var(--text-dim);max-width:175px;}
@@ -160,12 +166,13 @@ tbody td{padding:8px 10px;vertical-align:middle;font-size:.82rem;}
     </select>
     <select class="ctrl-select" id="vendorFilter" onchange="renderOrders()"><option value="">All Vendors</option></select>
     <label class="ctrl-label"><input type="checkbox" id="hideUnassigned" onchange="renderOrders()"> Hide unassigned</label>
+    <label class="ctrl-label"><input type="checkbox" id="showUnused" onchange="renderOrders()"> Show unused</label>
   </div>
   <div class="table-wrap">
     <table>
       <thead><tr>
         <th>Date</th><th>Vendor</th><th>Order #</th><th>Items</th>
-        <th>Amount</th><th>Assign to Customer</th><th>Tracking</th><th>Status</th>
+        <th>Amount</th><th>Assign to Customer</th><th>Tracking</th><th>Status</th><th>Actions</th>
       </tr></thead>
       <tbody id="tableBody"></tbody>
     </table>
@@ -237,7 +244,8 @@ const STATUS_MAP = {
   shipped:{cls:'b-shipped',lbl:'📦 Shipped'},
   transit:{cls:'b-transit',lbl:'🚚 In Transit'},
   processing:{cls:'b-processing',lbl:'🕐 Processing'},
-  invoiced:{cls:'b-invoiced',lbl:'🧾 Invoiced'}
+  invoiced:{cls:'b-invoiced',lbl:'🧾 Invoiced'},
+  not_used:{cls:'b-not-used',lbl:'🚫 Not Used'}
 };
 let orders = [], customers = [];
 
@@ -263,7 +271,21 @@ async function loadAll() {
     const [od,ld] = await Promise.all([apiFetch({action:'getOrders'}),apiFetch({action:'getLeads'})]);
     if(od&&!od.error){ orders=Array.isArray(od)?od:[]; setConn('ok',`Connected · ${orders.length} orders, ${(ld||[]).length} customers`); }
     else setConn('err','Error loading orders — check URL');
-    if(ld&&!ld.error&&Array.isArray(ld)) customers=ld.map(l=>({id:String(l['ID']||''),name:l['Customer Name']||'',vehicle:l['Vehicle']||'',status:l['Status']||''})).filter(c=>c.name);
+    if(ld&&!ld.error&&Array.isArray(ld)){
+      const sevenDaysAgo=Date.now()-7*24*60*60*1000;
+      customers=ld.map(l=>({
+        id:String(l['ID']||''),name:l['Customer Name']||'',vehicle:l['Vehicle']||'',
+        status:l['Status']||'',completionDate:l['Completion Date']||'',dateAdded:l['Date Added']||''
+      })).filter(c=>c.name).filter(c=>{
+        const closedStatuses=['Closed','Closed / Lost','Review Requested'];
+        if(closedStatuses.includes(c.status)){
+          const dateStr=c.completionDate||c.dateAdded;
+          if(!dateStr) return false;
+          return new Date(dateStr).getTime()>sevenDaysAgo;
+        }
+        return true;
+      });
+    }
     document.getElementById('syncText').textContent='Synced '+new Date().toLocaleTimeString();
     renderAll();
   } catch(e){ setConn('err','Connection failed'); showToast('Connection failed','err'); }
@@ -277,16 +299,19 @@ function renderOrders() {
   const sf=document.getElementById('statusFilter').value;
   const vf=document.getElementById('vendorFilter').value;
   const hu=document.getElementById('hideUnassigned').checked;
+  const su=document.getElementById('showUnused').checked;
   const filtered=orders.filter(o=>{
     const cust=o['CustomerAssignment']||o.customerAssignment||'';
+    const status=(o['Status']||o.status||'').toLowerCase();
+    if(!su&&status==='not_used')return false;
     if(cf&&cust!==cf)return false;
-    if(sf&&(o['Status']||o.status||'')!==sf)return false;
+    if(sf&&status!==sf)return false;
     if(vf&&(o['Vendor']||o.vendor||'')!==vf)return false;
     if(hu&&!cust)return false;
     return true;
   });
   const tbody=document.getElementById('tableBody');
-  if(!filtered.length){tbody.innerHTML=`<tr><td colspan="8" class="empty">No orders match.</td></tr>`;return;}
+  if(!filtered.length){tbody.innerHTML=`<tr><td colspan="9" class="empty">No orders match.</td></tr>`;return;}
   tbody.innerHTML=filtered.map(o=>{
     const id=o['ID']||o.id||'', date=o['Date']||o.date||'', vendor=o['Vendor']||o.vendor||'', orderNum=o['OrderNum']||o.orderNum||'';
     const rawItems=o['Items']||o.items||'[]', items=Array.isArray(rawItems)?rawItems:tryParseJson(rawItems,[]);
@@ -299,7 +324,9 @@ function renderOrders() {
     const itemsHtml=items.slice(0,2).map(i=>`<div class="item-line" title="${esc(i)}">${esc(i)}</div>`).join('')+(items.length>2?`<div class="more">+${items.length-2} more</div>`:'');
     const custOpts=customers.map(c=>{const val=c.name+(c.vehicle?` — ${c.vehicle}`:'');return `<option value="${esc(val)}"${assigned===val?' selected':''}>${esc(c.name)}${c.vehicle?' — '+esc(c.vehicle):''}</option>`;}).join('');
     const hasExtra=assigned&&!customers.some(c=>c.name+(c.vehicle?` — ${c.vehicle}`:'')=== assigned);
-    return `<tr>
+    const isUnused = status==='not_used';
+    const unusedLbl = isUnused ? 'Restore' : '🚫 Unused';
+    return `<tr${isUnused?' class="not-used-row"':''}>
       <td style="color:var(--text-muted);font-size:.72rem;white-space:nowrap">${esc(date)}</td>
       <td><span class="vendor-tag">${esc(vendor)}</span></td>
       <td><span class="order-num">${esc(orderNum)}</span></td>
@@ -312,6 +339,10 @@ function renderOrders() {
       </select></td>
       <td>${trackHtml||'<span class="track-plain">—</span>'}</td>
       <td><span class="badge ${sc.cls}">${sc.lbl}</span></td>
+      <td><div style="display:flex;gap:4px;flex-direction:column;">
+        <button class="act-btn unused" onclick="toggleUnused('${esc(id)}')">${unusedLbl}</button>
+        <button class="act-btn del" onclick="deleteOrderRow('${esc(id)}')">🗑 Delete</button>
+      </div></td>
     </tr>`;
   }).join('');
   const asgn=orders.filter(o=>o['CustomerAssignment']||o.customerAssignment).length;
@@ -401,6 +432,34 @@ function setConn(state,msg){const d=document.getElementById('connDot'),t=documen
 function setLoading(on){document.getElementById('loader').classList.toggle('hidden',!on);}
 let toastTmr;
 function showToast(msg,type=''){const t=document.getElementById('toast');t.textContent=msg;t.className='toast'+(type?' '+type:'');t.style.display='block';clearTimeout(toastTmr);toastTmr=setTimeout(()=>t.style.display='none',2500);}
+async function toggleUnused(id){
+  const o=orders.find(x=>(x['ID']||x.id)===id);
+  if(!o) return;
+  const cur=(o['Status']||o.status||'').toLowerCase();
+  const newStatus=cur==='not_used'?'processing':'not_used';
+  try{
+    const res=await apiFetch({action:'updateOrderField',id,field:'Status',value:newStatus});
+    if(res&&res.success){
+      if(o['Status']!==undefined)o['Status']=newStatus;else o.status=newStatus;
+      showToast(newStatus==='not_used'?'Marked as unused':'Restored ✓');
+      renderOrders();updateStats();renderByCustomer();
+    }else showToast('Save failed','err');
+  }catch(e){showToast('Error','err');}
+}
+
+async function deleteOrderRow(id){
+  const o=orders.find(x=>(x['ID']||x.id)===id);
+  const label=o?(o['Vendor']||o.vendor||'order'):'order';
+  if(!confirm('Delete '+label+' permanently? This cannot be undone.'))return;
+  try{
+    const res=await apiFetch({action:'deleteOrder',id});
+    if(res&&res.success){
+      orders=orders.filter(x=>(x['ID']||x.id)!==id);
+      renderAll();showToast('Order deleted');
+    }else showToast('Delete failed','err');
+  }catch(e){showToast('Error','err');}
+}
+
 function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
 function tryParseJson(s,fallback){try{return JSON.parse(s);}catch{return fallback;}}
 </script>
