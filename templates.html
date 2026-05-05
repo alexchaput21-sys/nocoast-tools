@@ -319,10 +319,6 @@
         <span class="field-label">Card/Venmo Price</span>
         <input class="field-input" data-key="CARD3" placeholder="$360" oninput="renderAll()">
       </div>
-      <div class="field-item">
-        <span class="field-label">Your Phone</span>
-        <input class="field-input" data-key="PHONE3" placeholder="701-xxx-xxxx" oninput="renderAll()">
-      </div>
     </div>
     <div class="tpl-body">
       <div class="tpl-text" id="tpl3-text"></div>
@@ -360,8 +356,7 @@
       <div class="tpl-text" id="tpl4-text"></div>
       <div class="tip">
         <div class="tip-text">
-          <strong>Why this works:</strong> Short, personal, no pressure. One sentence ask. Direct link removes all friction — they don't have to search.<br>
-          <strong>Add your Google review link</strong> where indicated. Get it from your Google Business Profile → "Get more reviews."
+          <strong>Why this works:</strong> Short, personal, no pressure. One sentence ask. Direct link removes all friction — they don't have to search for anything.
         </div>
       </div>
     </div>
@@ -395,27 +390,26 @@ To move forward, just reply here or give me a call and we'll set up a time to dr
 ${v.PHONE2 || '[your phone]'} | nocoastcustomsgf.com`,
 
   tpl3: (v) =>
-`Good news — the ${v.VEHICLE3 || '[vehicle]'} is done and ready for pickup, ${v.NAME3 || '[Name]'}.
+`Hey ${v.NAME3 || '[Name]'} — your ${v.VEHICLE3 || '[vehicle]'} is done, come grab it whenever you're ready.
 
-Turned out great. You're going to be happy with it.
+It came out really good. You're gonna love it.
 
-Balance due at pickup:
+Balance at pickup:
 Cash: ${v.CASH3 || '[cash price]'}
-Card or Venmo: ${v.CARD3 || '[card/venmo price]'}
+Card/Venmo: ${v.CARD3 || '[card/venmo price]'}
 
-Just let me know what day/time works and I'll have it ready for you.
+Just shoot me a text when you're heading over.
 
-— Alex
-${v.PHONE3 || '[your phone]'}`,
+— Alex`,
 
   tpl4: (v) =>
-`Hey ${v.NAME4 || '[Name]'} — hope you're loving ${v.WORK4 || '[the work]'}.
+`Hey ${v.NAME4 || '[Name]'} — hope you're loving how ${v.WORK4 || '[the work]'} turned out.
 
-If you have a minute, a Google review would mean a lot. Helps other folks find the shop.
+If you get a second, would you mind leaving a Google review? Helps a ton.
 
-[YOUR GOOGLE REVIEW LINK]
+https://g.page/r/CbCKV3VEXVhZEBM/review
 
-Appreciate the business. Send anyone my way if you know someone who needs interior work done.
+Appreciate you, and send anyone my way if they need interior work done.
 
 — Alex`
 };
