@@ -307,9 +307,9 @@ let splitOrderId = null, splitOrderTotal = 0;
 const DEFAULT_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycby-qKGEpC0BfBOkUurajjPKcTXIeK3qDNQ7qr44a6ynyH0v4xGIXkU7umxxNftZZuN4/exec';
 
 window.addEventListener('DOMContentLoaded', () => {
-  const saved = localStorage.getItem('nc_crm_url') || DEFAULT_SCRIPT_URL;
-  localStorage.setItem('nc_crm_url', saved);
-  document.getElementById('scriptUrl').value = saved;
+  // Always start with the baked-in URL so stale localStorage can't break things.
+  localStorage.setItem('nc_crm_url', DEFAULT_SCRIPT_URL);
+  document.getElementById('scriptUrl').value = DEFAULT_SCRIPT_URL;
   loadAll();
 });
 
