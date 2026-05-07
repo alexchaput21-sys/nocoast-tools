@@ -304,14 +304,17 @@ const STATUS_MAP = {
 let orders = [], customers = [];
 let splitOrderId = null, splitOrderTotal = 0;
 
+const DEFAULT_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycby-qKGEpC0BfBOkUurajjPKcTXIeK3qDNQ7qr44a6ynyH0v4xGIXkU7umxxNftZZuN4/exec';
+
 window.addEventListener('DOMContentLoaded', () => {
-  const saved = localStorage.getItem('nc_crm_url');
-  if (saved) { document.getElementById('scriptUrl').value = saved; loadAll(); }
-  else setConn(null, 'Paste your Apps Script exec URL above to connect');
+  const saved = localStorage.getItem('nc_crm_url') || DEFAULT_SCRIPT_URL;
+  localStorage.setItem('nc_crm_url', saved);
+  document.getElementById('scriptUrl').value = saved;
+  loadAll();
 });
 
 function saveUrl() { const v=document.getElementById('scriptUrl').value.trim(); if(v) localStorage.setItem('nc_crm_url',v); }
-function getUrl() { return document.getElementById('scriptUrl').value.trim(); }
+function getUrl() { return document.getElementById('scriptUrl').value.trim() || DEFAULT_SCRIPT_URL; }
 
 async function apiFetch(params) {
   const url=getUrl(); if(!url){showToast('Paste your Apps Script URL first','err');return null;}

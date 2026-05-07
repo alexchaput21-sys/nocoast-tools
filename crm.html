@@ -844,13 +844,15 @@ const STATUSES = [
   { key: 'Closed',           cls: 'col-closed',    col: '--s-closed' }
 ];
 
+// ── Default Apps Script URL (fallback if localStorage is cleared) ──
+const DEFAULT_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycby-qKGEpC0BfBOkUurajjPKcTXIeK3qDNQ7qr44a6ynyH0v4xGIXkU7umxxNftZZuN4/exec';
+
 // ── Init ───────────────────────────────────────────────────
 window.addEventListener('DOMContentLoaded', () => {
-  const saved = localStorage.getItem('nc_crm_url');
-  if (saved) {
-    document.getElementById('scriptUrl').value = saved;
-    loadLeads();
-  }
+  const saved = localStorage.getItem('nc_crm_url') || DEFAULT_SCRIPT_URL;
+  localStorage.setItem('nc_crm_url', saved);
+  document.getElementById('scriptUrl').value = saved;
+  loadLeads();
   renderPipeline([]); // Empty state
 });
 
@@ -860,7 +862,7 @@ function saveUrl() {
 }
 
 function getUrl() {
-  return document.getElementById('scriptUrl').value.trim();
+  return document.getElementById('scriptUrl').value.trim() || DEFAULT_SCRIPT_URL;
 }
 
 // ── API calls ──────────────────────────────────────────────
