@@ -1003,9 +1003,9 @@ function renderPipeline(allLeads) {
 function renderCard(lead) {
   const name    = lead['Customer Name'] || 'Unknown';
   const vehicle = lead['Vehicle'] || '—';
-  const work    = lead['Work Type'] || '';
-  const date    = lead['Date Added'] || '';
-  const value   = lead['Est. Value'] || '';
+  const work    = String(lead['Work Type'] || '');
+  const date    = String(lead['Date Added'] || '');
+  const value   = String(lead['Est. Value'] || '');
 
   const tags = work.split(',').slice(0, 2).map(w =>
     `<span class="tag">${w.trim()}</span>`
@@ -1383,7 +1383,7 @@ function closeOnOverlay(e, id) {
 }
 
 function esc(str) {
-  return String(str)
+  return String(str == null ? '' : str)
     .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
     .replace(/"/g,'&quot;');
 }
