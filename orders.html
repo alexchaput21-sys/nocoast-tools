@@ -346,7 +346,7 @@ async function loadAll() {
     }
     document.getElementById('syncText').textContent='Synced '+new Date().toLocaleTimeString();
     renderAll();
-  } catch(e){ setConn('err','Connection failed'); showToast('Connection failed','err'); }
+  } catch(e){ setConn('err','Error: '+(e.message||e)); showToast('Error: '+(e.message||e),'err'); console.error('loadAll error:',e); }
   finally { setLoading(false); }
 }
 

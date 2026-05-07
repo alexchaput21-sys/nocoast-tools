@@ -933,7 +933,8 @@ async function loadLeads() {
     }
   } catch (e) {
     setConnected(false);
-    showToast('Connection failed — check your URL', 'error');
+    showToast('Error: ' + (e.message || e), 'error');
+    console.error('loadLeads error:', e);
   } finally {
     setLoading(false);
   }
