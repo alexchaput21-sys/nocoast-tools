@@ -1,0 +1,569 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>No Coast — Need to Order</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:#111213; --surface:#18191b; --surface2:#1f2023;
+  --border:#2c2d30; --border-hi:#454648;
+  --gold:#c9951a; --gold-dim:rgba(201,149,26,0.15);
+  --text:#dfe0e3; --text-dim:#7a7c82; --text-muted:#434548;
+  --green:#22c55e; --blue:#3b82f6; --orange:#f97316; --red:#ef4444;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+html,body{height:100%;background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;}
+body{display:flex;flex-direction:column;min-height:100vh;}
+
+/* ── Topbar ── */
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:0 20px;height:52px;border-bottom:1px solid var(--border);background:var(--surface);position:sticky;top:0;z-index:100;gap:12px;}
+.topbar-left{display:flex;align-items:center;gap:12px;}
+.back-btn{color:var(--text-dim);text-decoration:none;font-family:'DM Mono',monospace;font-size:.7rem;letter-spacing:.1em;transition:color .1s;display:flex;align-items:center;gap:4px;}
+.back-btn:hover{color:var(--gold);}
+.logo{font-family:'Bebas Neue',sans-serif;font-size:1.3rem;letter-spacing:.1em;color:var(--gold);}
+.logo span{font-family:'DM Mono',monospace;font-size:.55rem;letter-spacing:.18em;color:var(--text-muted);display:block;margin-top:-3px;text-transform:uppercase;}
+.topbar-right{display:flex;gap:8px;align-items:center;}
+.sync-text{font-family:'DM Mono',monospace;font-size:.62rem;color:var(--text-muted);}
+.btn{font-family:'DM Mono',monospace;font-size:.62rem;letter-spacing:.1em;text-transform:uppercase;padding:6px 12px;border:1px solid var(--border);background:var(--surface2);color:var(--text-dim);cursor:pointer;transition:all .12s;white-space:nowrap;}
+.btn:hover{border-color:var(--border-hi);color:var(--text);}
+.btn-gold{background:var(--gold);border-color:var(--gold);color:#000;font-weight:500;}
+.btn-gold:hover{background:#b8860b;border-color:#b8860b;color:#000;}
+
+/* ── Config bar ── */
+.config-bar{display:flex;align-items:center;gap:8px;padding:7px 20px;background:var(--surface2);border-bottom:1px solid var(--border);flex-wrap:wrap;}
+.config-input{background:var(--bg);border:1px solid var(--border);color:var(--text-dim);font-family:'DM Mono',monospace;font-size:.65rem;padding:5px 8px;width:340px;outline:none;max-width:100%;}
+.config-input:focus{border-color:var(--gold);color:var(--text);}
+.config-input::placeholder{color:var(--text-muted);}
+.conn-dot{width:6px;height:6px;border-radius:50%;background:var(--text-muted);flex-shrink:0;}
+.conn-dot.ok{background:var(--green);}
+.conn-dot.err{background:var(--red);}
+.conn-dot.spin{background:var(--orange);animation:pulse 1s infinite;}
+@keyframes pulse{0%,100%{opacity:1;}50%{opacity:.3;}}
+.conn-text{font-family:'DM Mono',monospace;font-size:.6rem;color:var(--text-muted);}
+
+/* ── Stats bar ── */
+.statsbar{display:flex;gap:1px;background:var(--border);}
+.stat{flex:1;background:var(--surface);padding:12px 18px;}
+.stat-lbl{font-family:'DM Mono',monospace;font-size:.55rem;letter-spacing:.16em;text-transform:uppercase;color:var(--text-muted);}
+.stat-val{font-family:'Bebas Neue',sans-serif;font-size:1.7rem;line-height:1;margin-top:2px;}
+.stat-val.gold{color:var(--gold);}
+.stat-val.green{color:var(--green);}
+.stat-val.orange{color:var(--orange);}
+
+/* ── Main content ── */
+.content{flex:1;display:flex;flex-direction:column;}
+.controls{display:flex;gap:8px;padding:10px 20px;background:var(--surface2);border-bottom:1px solid var(--border);flex-wrap:wrap;align-items:center;}
+.ctrl-select{background:var(--bg);border:1px solid var(--border);color:var(--text-dim);font-family:'DM Mono',monospace;font-size:.65rem;padding:5px 8px;cursor:pointer;outline:none;transition:border-color .1s;}
+.ctrl-select:focus{border-color:var(--gold);}
+.table-wrap{overflow-x:auto;flex:1;}
+table{width:100%;border-collapse:collapse;min-width:560px;}
+thead th{background:var(--surface2);padding:8px 10px;text-align:left;font-family:'DM Mono',monospace;font-size:.58rem;letter-spacing:.12em;text-transform:uppercase;color:var(--text-muted);border-bottom:2px solid var(--border);white-space:nowrap;}
+tbody tr{border-bottom:1px solid var(--border);transition:background .1s;}
+tbody tr:hover{background:var(--surface2);}
+tbody tr.matched{background:rgba(34,197,94,.04);border-bottom-color:rgba(34,197,94,.15);}
+tbody td{padding:9px 10px;vertical-align:middle;font-size:.85rem;}
+.item-name{font-weight:500;color:var(--text);}
+.qty-badge{display:inline-flex;align-items:center;justify-content:center;min-width:36px;padding:2px 8px;background:var(--gold-dim);border:1px solid rgba(201,149,26,.3);font-family:'DM Mono',monospace;font-size:.72rem;color:var(--gold);font-weight:500;}
+.assign-tag{display:inline-block;padding:3px 8px;background:var(--surface2);border:1px solid var(--border);font-family:'DM Mono',monospace;font-size:.65rem;color:var(--text-dim);}
+.assign-tag.has-customer{border-color:rgba(59,130,246,.3);background:rgba(59,130,246,.06);color:var(--blue);}
+.date-cell{font-family:'DM Mono',monospace;font-size:.68rem;color:var(--text-muted);white-space:nowrap;}
+.act-btn{background:none;border:1px solid var(--border);color:var(--text-muted);font-size:.58rem;font-family:'DM Mono',monospace;padding:2px 8px;cursor:pointer;transition:all .12s;white-space:nowrap;letter-spacing:.04em;}
+.act-btn:hover{border-color:var(--border-hi);color:var(--text);}
+.act-btn.del:hover{border-color:rgba(239,68,68,.4);color:#f87171;}
+.matched-badge{display:inline-flex;align-items:center;gap:4px;padding:3px 8px;background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.3);font-family:'DM Mono',monospace;font-size:.6rem;color:var(--green);white-space:nowrap;}
+.empty{text-align:center;padding:52px;font-family:'DM Mono',monospace;font-size:.7rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:.1em;}
+.empty-sub{margin-top:8px;font-size:.6rem;color:var(--text-muted);opacity:.6;}
+.notes-cell{font-size:.75rem;color:var(--text-dim);max-width:180px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+
+/* ── Modal ── */
+.modal-ov{position:fixed;inset:0;background:rgba(0,0,0,.7);display:none;align-items:center;justify-content:center;z-index:300;padding:16px;}
+.modal-ov.open{display:flex;}
+.modal{background:var(--surface);border:1px solid var(--border);width:100%;max-width:480px;max-height:90vh;overflow-y:auto;}
+.modal-hdr{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;border-bottom:1px solid var(--border);position:sticky;top:0;background:var(--surface);}
+.modal-title{font-family:'Bebas Neue',sans-serif;font-size:1.2rem;color:var(--gold);}
+.modal-close{background:none;border:none;color:var(--text-muted);font-size:1.1rem;cursor:pointer;padding:2px 6px;transition:color .1s;}
+.modal-close:hover{color:var(--text);}
+.modal-body{padding:18px;display:flex;flex-direction:column;gap:14px;}
+.field{display:flex;flex-direction:column;gap:5px;}
+.field-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+label{font-family:'DM Mono',monospace;font-size:.58rem;letter-spacing:.14em;text-transform:uppercase;color:var(--text-muted);}
+.f-input{background:var(--bg);border:1px solid var(--border);color:var(--text);font-family:'DM Sans',sans-serif;font-size:.85rem;padding:8px 10px;outline:none;width:100%;transition:border-color .12s;}
+.f-input:focus{border-color:var(--gold);}
+.f-input::placeholder{color:var(--text-muted);}
+.f-select{background:var(--bg);border:1px solid var(--border);color:var(--text-dim);font-family:'DM Mono',monospace;font-size:.72rem;padding:8px 10px;outline:none;cursor:pointer;width:100%;transition:border-color .12s;}
+.f-select:focus{border-color:var(--gold);}
+.modal-ftr{padding:12px 18px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:8px;}
+
+/* ── Fulfilled banner ── */
+.fulfilled-banner{padding:10px 20px;background:rgba(34,197,94,.08);border-bottom:1px solid rgba(34,197,94,.2);display:none;align-items:center;gap:10px;}
+.fulfilled-banner.show{display:flex;}
+.fulfilled-banner span{font-family:'DM Mono',monospace;font-size:.68rem;color:var(--green);}
+.fulfilled-banner button{margin-left:auto;font-family:'DM Mono',monospace;font-size:.6rem;background:none;border:1px solid rgba(34,197,94,.3);color:var(--green);padding:3px 9px;cursor:pointer;}
+
+/* ── Toast ── */
+.toast{position:fixed;bottom:20px;right:20px;background:var(--surface);border:1px solid var(--border);border-left:3px solid var(--gold);padding:10px 16px;font-family:'DM Mono',monospace;font-size:.7rem;color:var(--text);z-index:500;animation:slideIn .18s;display:none;max-width:300px;line-height:1.5;}
+.toast.err{border-left-color:var(--red);}
+.toast.ok{border-left-color:var(--green);}
+@keyframes slideIn{from{opacity:0;transform:translateX(8px);}to{opacity:1;transform:translateX(0);}}
+
+/* ── Loading ── */
+.loading-overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center;z-index:400;}
+.loading-overlay.hidden{display:none;}
+.spinner{width:28px;height:28px;border:2px solid var(--border);border-top-color:var(--gold);border-radius:50%;animation:spin .6s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg);}}
+
+@media(max-width:600px){
+  .topbar{padding:0 12px;}
+  .config-input{width:100%;}
+  .statsbar{flex-wrap:wrap;}
+  .stat{min-width:50%;}
+  .field-row{grid-template-columns:1fr;}
+}
+</style>
+</head>
+<body>
+
+<!-- Top Bar -->
+<div class="topbar">
+  <div class="topbar-left">
+    <a href="index.html" class="back-btn">← Back</a>
+    <div class="logo">Need to Order<span>Order Wishlist</span></div>
+  </div>
+  <div class="topbar-right">
+    <span class="sync-text" id="syncText">—</span>
+    <button class="btn" onclick="checkFulfilled()">↻ Check Orders</button>
+    <button class="btn btn-gold" onclick="openModal()">+ Add Item</button>
+  </div>
+</div>
+
+<!-- Apps Script Config -->
+<div class="config-bar">
+  <div class="conn-dot spin" id="connDot"></div>
+  <span class="conn-text" id="connText">Loading customer list…</span>
+  <input class="config-input" id="scriptUrl" placeholder="https://script.google.com/macros/s/.../exec" oninput="saveUrl()">
+</div>
+
+<!-- Stats Bar -->
+<div class="statsbar">
+  <div class="stat"><div class="stat-lbl">Pending Items</div><div class="stat-val gold" id="sPending">—</div></div>
+  <div class="stat"><div class="stat-lbl">Assigned to Jobs</div><div class="stat-val" id="sAssigned">—</div></div>
+  <div class="stat"><div class="stat-lbl">Unassigned</div><div class="stat-val orange" id="sUnassigned">—</div></div>
+  <div class="stat"><div class="stat-lbl">Fulfilled Today</div><div class="stat-val green" id="sFulfilled">—</div></div>
+</div>
+
+<!-- Fulfilled Banner -->
+<div class="fulfilled-banner" id="fulfilledBanner">
+  <span id="fulfilledMsg"></span>
+  <button onclick="dismissBanner()">Dismiss</button>
+</div>
+
+<!-- Controls -->
+<div class="content">
+  <div class="controls">
+    <select class="ctrl-select" id="custFilter" onchange="renderList()"><option value="">All Jobs</option></select>
+    <select class="ctrl-select" id="sortBy" onchange="renderList()">
+      <option value="date-new">Newest First</option>
+      <option value="date-old">Oldest First</option>
+      <option value="customer">By Customer</option>
+    </select>
+  </div>
+
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>What to Order</th>
+          <th>Qty</th>
+          <th>Assigned To</th>
+          <th>Notes</th>
+          <th>Date Added</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody id="tableBody"></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Add / Edit Modal -->
+<div class="modal-ov" id="modal">
+  <div class="modal">
+    <div class="modal-hdr">
+      <span class="modal-title" id="modalTitle">Add Item to Order</span>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="field">
+        <label>What to Order *</label>
+        <input class="f-input" id="f_what" placeholder="e.g. Vinyl fabric, foam padding, hog rings…">
+      </div>
+      <div class="field-row">
+        <div class="field">
+          <label>Quantity *</label>
+          <input class="f-input" id="f_qty" type="number" min="1" step="1" placeholder="1">
+        </div>
+        <div class="field">
+          <label>Unit (optional)</label>
+          <input class="f-input" id="f_unit" placeholder="e.g. yards, pcs, rolls">
+        </div>
+      </div>
+      <div class="field">
+        <label>Assign to Job</label>
+        <select class="f-select" id="f_customer">
+          <option value="">— No assignment —</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Notes (optional)</label>
+        <input class="f-input" id="f_notes" placeholder="e.g. Color: black, vendor preference…">
+      </div>
+    </div>
+    <div class="modal-ftr">
+      <button class="btn" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-gold" onclick="saveItem()">Save Item</button>
+    </div>
+  </div>
+</div>
+
+<div class="loading-overlay hidden" id="loader"><div class="spinner"></div></div>
+<div class="toast" id="toast"></div>
+
+<script>
+const STORAGE_KEY = 'nc_needs';
+const FULFILLED_KEY = 'nc_needs_fulfilled_today';
+const DEFAULT_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycby-qKGEpC0BfBOkUurajjPKcTXIeK3qDNQ7qr44a6ynyH0v4xGIXkU7umxxNftZZuN4/exec';
+
+let needs = [];
+let customers = [];
+let editingId = null;
+let fulfilledTodayCount = 0;
+
+/* ── Init ── */
+window.addEventListener('DOMContentLoaded', () => {
+  localStorage.setItem('nc_crm_url', DEFAULT_SCRIPT_URL);
+  document.getElementById('scriptUrl').value = DEFAULT_SCRIPT_URL;
+  needs = loadNeeds();
+  loadFulfilledToday();
+  renderList();
+  updateStats();
+  loadCustomers();
+});
+
+/* ── Storage ── */
+function loadNeeds() {
+  try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || []; }
+  catch { return []; }
+}
+function saveNeeds() {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(needs));
+}
+function loadFulfilledToday() {
+  const today = new Date().toISOString().slice(0, 10);
+  const data = JSON.parse(localStorage.getItem(FULFILLED_KEY) || '{}');
+  if (data.date === today) fulfilledTodayCount = data.count || 0;
+  else fulfilledTodayCount = 0;
+  document.getElementById('sFulfilled').textContent = fulfilledTodayCount || '0';
+}
+function incrementFulfilled(n = 1) {
+  const today = new Date().toISOString().slice(0, 10);
+  fulfilledTodayCount += n;
+  localStorage.setItem(FULFILLED_KEY, JSON.stringify({ date: today, count: fulfilledTodayCount }));
+  document.getElementById('sFulfilled').textContent = fulfilledTodayCount;
+}
+
+/* ── URL / API ── */
+function saveUrl() { const v = document.getElementById('scriptUrl').value.trim(); if (v) localStorage.setItem('nc_crm_url', v); }
+function getUrl() { return document.getElementById('scriptUrl').value.trim() || DEFAULT_SCRIPT_URL; }
+async function apiFetch(params) {
+  const url = getUrl(); if (!url) return null;
+  const res = await fetch(`${url}?${new URLSearchParams(params).toString()}`);
+  return res.json();
+}
+
+/* ── Load customers from CRM ── */
+async function loadCustomers() {
+  setConn('spin', 'Loading customer list…');
+  try {
+    const data = await apiFetch({ action: 'getLeads' });
+    if (data && !data.error && Array.isArray(data)) {
+      const sevenDaysAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
+      customers = data.map(l => ({
+        id: String(l['ID'] || ''),
+        name: l['Customer Name'] || '',
+        vehicle: l['Vehicle'] || '',
+        status: l['Status'] || '',
+        completionDate: l['Completion Date'] || '',
+        dateAdded: l['Date Added'] || ''
+      })).filter(c => c.name).filter(c => {
+        const closed = ['Closed', 'Closed / Lost', 'Review Requested'];
+        if (closed.includes(c.status)) {
+          const dateStr = c.completionDate || c.dateAdded;
+          if (!dateStr) return false;
+          return new Date(dateStr).getTime() > sevenDaysAgo;
+        }
+        return true;
+      });
+      setConn('ok', `Connected · ${customers.length} customers loaded`);
+      document.getElementById('syncText').textContent = 'Synced ' + new Date().toLocaleTimeString();
+      populateCustomerDropdowns();
+      // Auto-check for fulfilled needs on load
+      await checkFulfilled();
+    } else {
+      setConn('err', 'Could not load customers — check URL');
+    }
+  } catch (e) {
+    setConn('err', 'Error: ' + (e.message || e));
+  }
+}
+
+function populateCustomerDropdowns() {
+  const opts = customers.map(c => {
+    const val = c.name + (c.vehicle ? ` — ${c.vehicle}` : '');
+    return `<option value="${esc(val)}">${esc(c.name)}${c.vehicle ? ' — ' + esc(c.vehicle) : ''}</option>`;
+  }).join('');
+  document.getElementById('f_customer').innerHTML = '<option value="">— No assignment —</option>' + opts;
+
+  // Customer filter dropdown
+  const custFilter = document.getElementById('custFilter');
+  const cur = custFilter.value;
+  const allCustomersInNeeds = [...new Set(needs.map(n => n.assignedTo).filter(Boolean))].sort();
+  custFilter.innerHTML = '<option value="">All Jobs</option>' +
+    allCustomersInNeeds.map(c => `<option value="${esc(c)}"${c === cur ? ' selected' : ''}>${esc(c)}</option>`).join('');
+}
+
+/* ── Check Fulfilled ── */
+async function checkFulfilled() {
+  if (!needs.length) return;
+  try {
+    const data = await apiFetch({ action: 'getOrders' });
+    if (!data || data.error || !Array.isArray(data)) return;
+
+    const orders = data.filter(o => {
+      const s = (o['Status'] || o.status || '').toLowerCase();
+      return s !== 'not_used';
+    });
+
+    let removed = [];
+    const remaining = [];
+
+    for (const need of needs) {
+      if (!need.assignedTo) { remaining.push(need); continue; }
+
+      // Find an order assigned to the same customer that arrived after the need was added
+      const match = orders.find(o => {
+        const assignment = o['CustomerAssignment'] || o.customerAssignment || '';
+        if (!assignment) return false;
+
+        // Handle split assignments
+        if (assignment.startsWith('SPLIT:')) {
+          try {
+            const sd = JSON.parse(assignment.slice(6));
+            return (sd.splits || []).some(s => s.c === need.assignedTo);
+          } catch { return false; }
+        }
+
+        if (assignment !== need.assignedTo) return false;
+
+        // Order must be dated on or after the need was added
+        const orderDate = o['DateSort'] || o.dateSort || o['Date'] || o.date || '';
+        if (!orderDate || !need.dateAdded) return true; // If no dates, assume match
+        return orderDate >= need.dateAdded;
+      });
+
+      if (match) {
+        removed.push(need);
+      } else {
+        remaining.push(need);
+      }
+    }
+
+    if (removed.length) {
+      needs = remaining;
+      saveNeeds();
+      renderList();
+      updateStats();
+      populateCustomerDropdowns();
+      incrementFulfilled(removed.length);
+
+      const names = removed.map(n => `"${n.what}"${n.assignedTo ? ' for ' + n.assignedTo.split(' — ')[0] : ''}`).join(', ');
+      showFulfilledBanner(`✓ ${removed.length} item${removed.length > 1 ? 's' : ''} matched & removed: ${names}`);
+      showToast(`${removed.length} item${removed.length > 1 ? 's' : ''} fulfilled ✓`, 'ok');
+    }
+  } catch (e) {
+    console.error('checkFulfilled error:', e);
+  }
+}
+
+function showFulfilledBanner(msg) {
+  document.getElementById('fulfilledMsg').textContent = msg;
+  document.getElementById('fulfilledBanner').classList.add('show');
+}
+function dismissBanner() {
+  document.getElementById('fulfilledBanner').classList.remove('show');
+}
+
+/* ── Render ── */
+function renderList() {
+  const cf = document.getElementById('custFilter').value;
+  const sort = document.getElementById('sortBy').value;
+
+  let list = [...needs];
+  if (cf) list = list.filter(n => n.assignedTo === cf);
+
+  list.sort((a, b) => {
+    if (sort === 'date-old') return (a.dateAdded || '').localeCompare(b.dateAdded || '');
+    if (sort === 'customer') return (a.assignedTo || '').localeCompare(b.assignedTo || '');
+    return (b.dateAdded || '').localeCompare(a.dateAdded || ''); // newest first
+  });
+
+  const tbody = document.getElementById('tableBody');
+  if (!list.length) {
+    tbody.innerHTML = `<tr><td colspan="6" class="empty">
+      No items yet.<div class="empty-sub">Hit "+ Add Item" to start your order list.</div>
+    </td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = list.map(n => {
+    const qtyLabel = n.qty + (n.unit ? ` ${n.unit}` : '');
+    const hasCustomer = !!n.assignedTo;
+    const customerName = n.assignedTo ? n.assignedTo.split(' — ')[0] : '';
+    const vehicle = n.assignedTo && n.assignedTo.includes(' — ') ? n.assignedTo.split(' — ').slice(1).join(' — ') : '';
+    const dateDisplay = n.dateAdded ? new Date(n.dateAdded + 'T12:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: '2-digit' }) : '—';
+
+    return `<tr>
+      <td><span class="item-name">${esc(n.what)}</span></td>
+      <td><span class="qty-badge">×${esc(qtyLabel)}</span></td>
+      <td>${hasCustomer
+        ? `<span class="assign-tag has-customer">${esc(customerName)}${vehicle ? '<br><span style="opacity:.6;font-size:.58rem;">' + esc(vehicle) + '</span>' : ''}</span>`
+        : `<span class="assign-tag" style="color:var(--text-muted);border-style:dashed;">—</span>`
+      }</td>
+      <td><span class="notes-cell" title="${esc(n.notes || '')}">${n.notes ? esc(n.notes) : '<span style="color:var(--text-muted)">—</span>'}</span></td>
+      <td><span class="date-cell">${dateDisplay}</span></td>
+      <td>
+        <div style="display:flex;gap:4px;">
+          <button class="act-btn" onclick="editItem('${esc(n.id)}')">✎ Edit</button>
+          <button class="act-btn del" onclick="deleteItem('${esc(n.id)}')">🗑</button>
+        </div>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+function updateStats() {
+  const pending = needs.length;
+  const assigned = needs.filter(n => n.assignedTo).length;
+  const unassigned = pending - assigned;
+  document.getElementById('sPending').textContent = pending || '0';
+  document.getElementById('sAssigned').textContent = assigned || '0';
+  document.getElementById('sUnassigned').textContent = unassigned || '0';
+}
+
+/* ── Modal ── */
+function openModal(id = null) {
+  editingId = id;
+  document.getElementById('modalTitle').textContent = id ? 'Edit Item' : 'Add Item to Order';
+  if (id) {
+    const n = needs.find(x => x.id === id);
+    if (!n) return;
+    document.getElementById('f_what').value = n.what || '';
+    document.getElementById('f_qty').value = n.qty || '';
+    document.getElementById('f_unit').value = n.unit || '';
+    document.getElementById('f_notes').value = n.notes || '';
+    // Set customer after a tick (dropdown may need to populate)
+    setTimeout(() => { document.getElementById('f_customer').value = n.assignedTo || ''; }, 10);
+  } else {
+    ['f_what', 'f_qty', 'f_unit', 'f_notes'].forEach(id => document.getElementById(id).value = '');
+    document.getElementById('f_customer').value = '';
+  }
+  document.getElementById('modal').classList.add('open');
+  setTimeout(() => document.getElementById('f_what').focus(), 50);
+}
+
+function closeModal() {
+  document.getElementById('modal').classList.remove('open');
+  editingId = null;
+}
+
+function editItem(id) { openModal(id); }
+
+function saveItem() {
+  const what = document.getElementById('f_what').value.trim();
+  const qty = parseInt(document.getElementById('f_qty').value) || 1;
+  const unit = document.getElementById('f_unit').value.trim();
+  const assignedTo = document.getElementById('f_customer').value;
+  const notes = document.getElementById('f_notes').value.trim();
+
+  if (!what) { showToast('Item name is required', 'err'); return; }
+
+  if (editingId) {
+    const idx = needs.findIndex(n => n.id === editingId);
+    if (idx !== -1) {
+      needs[idx] = { ...needs[idx], what, qty, unit, assignedTo, notes };
+      showToast('Item updated ✓', 'ok');
+    }
+  } else {
+    const today = new Date().toISOString().slice(0, 10);
+    needs.push({
+      id: 'need_' + Date.now() + '_' + Math.random().toString(36).slice(2, 7),
+      what, qty, unit, assignedTo, notes,
+      dateAdded: today
+    });
+    showToast('Item added ✓', 'ok');
+  }
+
+  saveNeeds();
+  renderList();
+  updateStats();
+  populateCustomerDropdowns();
+  closeModal();
+}
+
+function deleteItem(id) {
+  const n = needs.find(x => x.id === id);
+  if (!n) return;
+  if (!confirm(`Remove "${n.what}" from the list?`)) return;
+  needs = needs.filter(x => x.id !== id);
+  saveNeeds();
+  renderList();
+  updateStats();
+  populateCustomerDropdowns();
+  showToast('Item removed');
+}
+
+/* ── Util ── */
+function setConn(state, msg) {
+  const d = document.getElementById('connDot'), t = document.getElementById('connText');
+  d.className = 'conn-dot' + (state ? ' ' + state : '');
+  t.textContent = msg;
+}
+
+let toastTmr;
+function showToast(msg, type = '') {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast' + (type ? ' ' + type : '');
+  t.style.display = 'block';
+  clearTimeout(toastTmr);
+  toastTmr = setTimeout(() => t.style.display = 'none', 2800);
+}
+
+function esc(s) {
+  return String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
+// Close modal on backdrop click
+document.getElementById('modal').addEventListener('click', function(e) {
+  if (e.target === this) closeModal();
+});
+
+// Keyboard shortcuts
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') closeModal();
+  if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') saveItem();
+});
+</script>
+</body>
+</html>
