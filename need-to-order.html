@@ -11,7 +11,7 @@
   --border:#2c2d30; --border-hi:#454648;
   --gold:#c9951a; --gold-dim:rgba(201,149,26,0.15);
   --text:#dfe0e3; --text-dim:#7a7c82; --text-muted:#434548;
-  --green:#22c55e; --blue:#3b82f6; --orange:#f97316; --red:#ef4444;
+  --green:#22c55e; --blue:#3b82f6; --orange:#f97316; --red:#ef4444; --purple:#a855f7;
 }
 *{box-sizing:border-box;margin:0;padding:0;}
 html,body{height:100%;background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;}
@@ -51,31 +51,59 @@ body{display:flex;flex-direction:column;min-height:100vh;}
 .stat-val.gold{color:var(--gold);}
 .stat-val.green{color:var(--green);}
 .stat-val.orange{color:var(--orange);}
+.stat-val.blue{color:var(--blue);}
 
-/* ── Main content ── */
-.content{flex:1;display:flex;flex-direction:column;}
+/* ── Tabs ── */
+.tabs{display:flex;border-bottom:1px solid var(--border);background:var(--surface);padding:0 20px;}
+.tab{padding:10px 16px;font-family:'DM Mono',monospace;font-size:.65rem;letter-spacing:.1em;text-transform:uppercase;color:var(--text-muted);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px;white-space:nowrap;transition:all .1s;}
+.tab.active{color:var(--gold);border-bottom-color:var(--gold);}
+.tab-panel{display:none;flex:1;flex-direction:column;}
+.tab-panel.active{display:flex;}
+
+/* ── Controls ── */
 .controls{display:flex;gap:8px;padding:10px 20px;background:var(--surface2);border-bottom:1px solid var(--border);flex-wrap:wrap;align-items:center;}
 .ctrl-select{background:var(--bg);border:1px solid var(--border);color:var(--text-dim);font-family:'DM Mono',monospace;font-size:.65rem;padding:5px 8px;cursor:pointer;outline:none;transition:border-color .1s;}
 .ctrl-select:focus{border-color:var(--gold);}
+
+/* ── Table ── */
 .table-wrap{overflow-x:auto;flex:1;}
-table{width:100%;border-collapse:collapse;min-width:560px;}
+table{width:100%;border-collapse:collapse;min-width:680px;}
 thead th{background:var(--surface2);padding:8px 10px;text-align:left;font-family:'DM Mono',monospace;font-size:.58rem;letter-spacing:.12em;text-transform:uppercase;color:var(--text-muted);border-bottom:2px solid var(--border);white-space:nowrap;}
+thead th.right{text-align:right;}
 tbody tr{border-bottom:1px solid var(--border);transition:background .1s;}
 tbody tr:hover{background:var(--surface2);}
-tbody tr.matched{background:rgba(34,197,94,.04);border-bottom-color:rgba(34,197,94,.15);}
+tbody tr.ordered-row{opacity:.7;}
 tbody td{padding:9px 10px;vertical-align:middle;font-size:.85rem;}
+tbody td.right{text-align:right;}
 .item-name{font-weight:500;color:var(--text);}
 .qty-badge{display:inline-flex;align-items:center;justify-content:center;min-width:36px;padding:2px 8px;background:var(--gold-dim);border:1px solid rgba(201,149,26,.3);font-family:'DM Mono',monospace;font-size:.72rem;color:var(--gold);font-weight:500;}
+.price-cell{font-family:'DM Mono',monospace;font-size:.78rem;color:var(--text-dim);}
+.cost-cell{font-family:'DM Mono',monospace;font-size:.82rem;color:var(--gold);font-weight:500;}
+.cost-cell.no-price{color:var(--text-muted);font-style:italic;font-size:.7rem;}
 .assign-tag{display:inline-block;padding:3px 8px;background:var(--surface2);border:1px solid var(--border);font-family:'DM Mono',monospace;font-size:.65rem;color:var(--text-dim);}
 .assign-tag.has-customer{border-color:rgba(59,130,246,.3);background:rgba(59,130,246,.06);color:var(--blue);}
 .date-cell{font-family:'DM Mono',monospace;font-size:.68rem;color:var(--text-muted);white-space:nowrap;}
 .act-btn{background:none;border:1px solid var(--border);color:var(--text-muted);font-size:.58rem;font-family:'DM Mono',monospace;padding:2px 8px;cursor:pointer;transition:all .12s;white-space:nowrap;letter-spacing:.04em;}
 .act-btn:hover{border-color:var(--border-hi);color:var(--text);}
+.act-btn.order:hover{border-color:rgba(34,197,94,.4);color:var(--green);}
+.act-btn.restore:hover{border-color:rgba(249,115,22,.4);color:var(--orange);}
 .act-btn.del:hover{border-color:rgba(239,68,68,.4);color:#f87171;}
-.matched-badge{display:inline-flex;align-items:center;gap:4px;padding:3px 8px;background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.3);font-family:'DM Mono',monospace;font-size:.6rem;color:var(--green);white-space:nowrap;}
+.ordered-badge{display:inline-flex;align-items:center;gap:4px;padding:2px 7px;background:rgba(168,85,247,.1);border:1px solid rgba(168,85,247,.3);font-family:'DM Mono',monospace;font-size:.6rem;color:var(--purple);white-space:nowrap;}
+.notes-cell{font-size:.75rem;color:var(--text-dim);max-width:160px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .empty{text-align:center;padding:52px;font-family:'DM Mono',monospace;font-size:.7rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:.1em;}
 .empty-sub{margin-top:8px;font-size:.6rem;color:var(--text-muted);opacity:.6;}
-.notes-cell{font-size:.75rem;color:var(--text-dim);max-width:180px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+
+/* ── Total footer row ── */
+.total-bar{display:flex;align-items:center;justify-content:flex-end;gap:20px;padding:10px 20px;background:var(--surface);border-top:2px solid var(--border);}
+.total-lbl{font-family:'DM Mono',monospace;font-size:.62rem;letter-spacing:.14em;text-transform:uppercase;color:var(--text-muted);}
+.total-val{font-family:'Bebas Neue',sans-serif;font-size:1.5rem;color:var(--gold);}
+.total-sub{font-family:'DM Mono',monospace;font-size:.58rem;color:var(--text-muted);margin-top:2px;}
+
+/* ── Fulfilled banner ── */
+.fulfilled-banner{padding:10px 20px;background:rgba(34,197,94,.08);border-bottom:1px solid rgba(34,197,94,.2);display:none;align-items:center;gap:10px;}
+.fulfilled-banner.show{display:flex;}
+.fulfilled-banner span{font-family:'DM Mono',monospace;font-size:.68rem;color:var(--green);}
+.fulfilled-banner button{margin-left:auto;font-family:'DM Mono',monospace;font-size:.6rem;background:none;border:1px solid rgba(34,197,94,.3);color:var(--green);padding:3px 9px;cursor:pointer;}
 
 /* ── Modal ── */
 .modal-ov{position:fixed;inset:0;background:rgba(0,0,0,.7);display:none;align-items:center;justify-content:center;z-index:300;padding:16px;}
@@ -88,6 +116,7 @@ tbody td{padding:9px 10px;vertical-align:middle;font-size:.85rem;}
 .modal-body{padding:18px;display:flex;flex-direction:column;gap:14px;}
 .field{display:flex;flex-direction:column;gap:5px;}
 .field-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.field-row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;}
 label{font-family:'DM Mono',monospace;font-size:.58rem;letter-spacing:.14em;text-transform:uppercase;color:var(--text-muted);}
 .f-input{background:var(--bg);border:1px solid var(--border);color:var(--text);font-family:'DM Sans',sans-serif;font-size:.85rem;padding:8px 10px;outline:none;width:100%;transition:border-color .12s;}
 .f-input:focus{border-color:var(--gold);}
@@ -95,12 +124,8 @@ label{font-family:'DM Mono',monospace;font-size:.58rem;letter-spacing:.14em;text
 .f-select{background:var(--bg);border:1px solid var(--border);color:var(--text-dim);font-family:'DM Mono',monospace;font-size:.72rem;padding:8px 10px;outline:none;cursor:pointer;width:100%;transition:border-color .12s;}
 .f-select:focus{border-color:var(--gold);}
 .modal-ftr{padding:12px 18px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:8px;}
-
-/* ── Fulfilled banner ── */
-.fulfilled-banner{padding:10px 20px;background:rgba(34,197,94,.08);border-bottom:1px solid rgba(34,197,94,.2);display:none;align-items:center;gap:10px;}
-.fulfilled-banner.show{display:flex;}
-.fulfilled-banner span{font-family:'DM Mono',monospace;font-size:.68rem;color:var(--green);}
-.fulfilled-banner button{margin-left:auto;font-family:'DM Mono',monospace;font-size:.6rem;background:none;border:1px solid rgba(34,197,94,.3);color:var(--green);padding:3px 9px;cursor:pointer;}
+.est-preview{font-family:'DM Mono',monospace;font-size:.7rem;color:var(--gold);padding:6px 10px;background:var(--gold-dim);border:1px solid rgba(201,149,26,.2);display:none;}
+.est-preview.show{display:block;}
 
 /* ── Toast ── */
 .toast{position:fixed;bottom:20px;right:20px;background:var(--surface);border:1px solid var(--border);border-left:3px solid var(--gold);padding:10px 16px;font-family:'DM Mono',monospace;font-size:.7rem;color:var(--text);z-index:500;animation:slideIn .18s;display:none;max-width:300px;line-height:1.5;}
@@ -114,12 +139,15 @@ label{font-family:'DM Mono',monospace;font-size:.58rem;letter-spacing:.14em;text
 .spinner{width:28px;height:28px;border:2px solid var(--border);border-top-color:var(--gold);border-radius:50%;animation:spin .6s linear infinite;}
 @keyframes spin{to{transform:rotate(360deg);}}
 
+.content{flex:1;display:flex;flex-direction:column;}
+
 @media(max-width:600px){
   .topbar{padding:0 12px;}
   .config-input{width:100%;}
   .statsbar{flex-wrap:wrap;}
   .stat{min-width:50%;}
-  .field-row{grid-template-columns:1fr;}
+  .field-row,.field-row3{grid-template-columns:1fr;}
+  .total-bar{flex-direction:column;align-items:flex-start;gap:4px;}
 }
 </style>
 </head>
@@ -147,9 +175,9 @@ label{font-family:'DM Mono',monospace;font-size:.58rem;letter-spacing:.14em;text
 
 <!-- Stats Bar -->
 <div class="statsbar">
-  <div class="stat"><div class="stat-lbl">Pending Items</div><div class="stat-val gold" id="sPending">—</div></div>
-  <div class="stat"><div class="stat-lbl">Assigned to Jobs</div><div class="stat-val" id="sAssigned">—</div></div>
-  <div class="stat"><div class="stat-lbl">Unassigned</div><div class="stat-val orange" id="sUnassigned">—</div></div>
+  <div class="stat"><div class="stat-lbl">Need to Order</div><div class="stat-val gold" id="sPending">—</div></div>
+  <div class="stat"><div class="stat-lbl">Est. Total Cost</div><div class="stat-val gold" id="sTotal">—</div></div>
+  <div class="stat"><div class="stat-lbl">Ordered / In Transit</div><div class="stat-val blue" id="sOrdered">—</div></div>
   <div class="stat"><div class="stat-lbl">Fulfilled Today</div><div class="stat-val green" id="sFulfilled">—</div></div>
 </div>
 
@@ -159,31 +187,68 @@ label{font-family:'DM Mono',monospace;font-size:.58rem;letter-spacing:.14em;text
   <button onclick="dismissBanner()">Dismiss</button>
 </div>
 
-<!-- Controls -->
 <div class="content">
-  <div class="controls">
-    <select class="ctrl-select" id="custFilter" onchange="renderList()"><option value="">All Jobs</option></select>
-    <select class="ctrl-select" id="sortBy" onchange="renderList()">
-      <option value="date-new">Newest First</option>
-      <option value="date-old">Oldest First</option>
-      <option value="customer">By Customer</option>
-    </select>
+  <!-- Tabs -->
+  <div class="tabs">
+    <div class="tab active" id="tab-pending-btn" onclick="switchTab('pending')">📋 Need to Order</div>
+    <div class="tab" id="tab-ordered-btn" onclick="switchTab('ordered')">📦 Ordered</div>
   </div>
 
-  <div class="table-wrap">
-    <table>
-      <thead>
-        <tr>
+  <!-- Need to Order Tab -->
+  <div class="tab-panel active" id="tab-pending">
+    <div class="controls">
+      <select class="ctrl-select" id="custFilter" onchange="renderPending()"><option value="">All Jobs</option></select>
+      <select class="ctrl-select" id="sortBy" onchange="renderPending()">
+        <option value="date-new">Newest First</option>
+        <option value="date-old">Oldest First</option>
+        <option value="customer">By Customer</option>
+        <option value="cost-high">Highest Cost</option>
+      </select>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr>
           <th>What to Order</th>
           <th>Qty</th>
+          <th class="right">Unit Price</th>
+          <th class="right">Est. Cost</th>
           <th>Assigned To</th>
           <th>Notes</th>
           <th>Date Added</th>
           <th>Actions</th>
-        </tr>
-      </thead>
-      <tbody id="tableBody"></tbody>
-    </table>
+        </tr></thead>
+        <tbody id="pendingBody"></tbody>
+      </table>
+    </div>
+    <div class="total-bar" id="totalBar">
+      <div>
+        <div class="total-lbl">Est. Total to Order</div>
+        <div class="total-sub" id="totalSub"></div>
+      </div>
+      <div class="total-val" id="grandTotal">$0.00</div>
+    </div>
+  </div>
+
+  <!-- Ordered Tab -->
+  <div class="tab-panel" id="tab-ordered">
+    <div class="controls" style="padding:10px 20px;">
+      <span style="font-family:'DM Mono',monospace;font-size:.65rem;color:var(--text-muted);">Items you've ordered — auto-removed when matched in Order Tracker</span>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr>
+          <th>What</th>
+          <th>Qty</th>
+          <th class="right">Unit Price</th>
+          <th class="right">Est. Cost</th>
+          <th>Assigned To</th>
+          <th>Notes</th>
+          <th>Date Ordered</th>
+          <th>Actions</th>
+        </tr></thead>
+        <tbody id="orderedBody"></tbody>
+      </table>
+    </div>
   </div>
 </div>
 
@@ -199,16 +264,21 @@ label{font-family:'DM Mono',monospace;font-size:.58rem;letter-spacing:.14em;text
         <label>What to Order *</label>
         <input class="f-input" id="f_what" placeholder="e.g. Vinyl fabric, foam padding, hog rings…">
       </div>
-      <div class="field-row">
+      <div class="field-row3">
         <div class="field">
           <label>Quantity *</label>
-          <input class="f-input" id="f_qty" type="number" min="1" step="1" placeholder="1">
+          <input class="f-input" id="f_qty" type="number" min="1" step="1" placeholder="1" oninput="updateEstPreview()">
         </div>
         <div class="field">
-          <label>Unit (optional)</label>
-          <input class="f-input" id="f_unit" placeholder="e.g. yards, pcs, rolls">
+          <label>Unit</label>
+          <input class="f-input" id="f_unit" placeholder="yards, pcs…">
+        </div>
+        <div class="field">
+          <label>Unit Price ($)</label>
+          <input class="f-input" id="f_price" type="number" min="0" step="0.01" placeholder="0.00" oninput="updateEstPreview()">
         </div>
       </div>
+      <div class="est-preview" id="estPreview"></div>
       <div class="field">
         <label>Assign to Job</label>
         <select class="f-select" id="f_customer">
@@ -239,6 +309,7 @@ let needs = [];
 let customers = [];
 let editingId = null;
 let fulfilledTodayCount = 0;
+let activeTab = 'pending';
 
 /* ── Init ── */
 window.addEventListener('DOMContentLoaded', () => {
@@ -246,8 +317,7 @@ window.addEventListener('DOMContentLoaded', () => {
   document.getElementById('scriptUrl').value = DEFAULT_SCRIPT_URL;
   needs = loadNeeds();
   loadFulfilledToday();
-  renderList();
-  updateStats();
+  renderAll();
   loadCustomers();
 });
 
@@ -262,8 +332,7 @@ function saveNeeds() {
 function loadFulfilledToday() {
   const today = new Date().toISOString().slice(0, 10);
   const data = JSON.parse(localStorage.getItem(FULFILLED_KEY) || '{}');
-  if (data.date === today) fulfilledTodayCount = data.count || 0;
-  else fulfilledTodayCount = 0;
+  fulfilledTodayCount = data.date === today ? (data.count || 0) : 0;
   document.getElementById('sFulfilled').textContent = fulfilledTodayCount || '0';
 }
 function incrementFulfilled(n = 1) {
@@ -282,7 +351,7 @@ async function apiFetch(params) {
   return res.json();
 }
 
-/* ── Load customers from CRM ── */
+/* ── Load customers ── */
 async function loadCustomers() {
   setConn('spin', 'Loading customer list…');
   try {
@@ -308,7 +377,6 @@ async function loadCustomers() {
       setConn('ok', `Connected · ${customers.length} customers loaded`);
       document.getElementById('syncText').textContent = 'Synced ' + new Date().toLocaleTimeString();
       populateCustomerDropdowns();
-      // Auto-check for fulfilled needs on load
       await checkFulfilled();
     } else {
       setConn('err', 'Could not load customers — check URL');
@@ -325,157 +393,248 @@ function populateCustomerDropdowns() {
   }).join('');
   document.getElementById('f_customer').innerHTML = '<option value="">— No assignment —</option>' + opts;
 
-  // Customer filter dropdown
   const custFilter = document.getElementById('custFilter');
   const cur = custFilter.value;
-  const allCustomersInNeeds = [...new Set(needs.map(n => n.assignedTo).filter(Boolean))].sort();
+  const allInNeeds = [...new Set(needs.filter(n => n.status !== 'ordered').map(n => n.assignedTo).filter(Boolean))].sort();
   custFilter.innerHTML = '<option value="">All Jobs</option>' +
-    allCustomersInNeeds.map(c => `<option value="${esc(c)}"${c === cur ? ' selected' : ''}>${esc(c)}</option>`).join('');
+    allInNeeds.map(c => `<option value="${esc(c)}"${c === cur ? ' selected' : ''}>${esc(c)}</option>`).join('');
 }
 
-/* ── Check Fulfilled ── */
+/* ── Check Fulfilled (auto-remove from order tracker) ── */
 async function checkFulfilled() {
   if (!needs.length) return;
   try {
     const data = await apiFetch({ action: 'getOrders' });
     if (!data || data.error || !Array.isArray(data)) return;
 
-    const orders = data.filter(o => {
-      const s = (o['Status'] || o.status || '').toLowerCase();
-      return s !== 'not_used';
-    });
-
+    const orders = data.filter(o => (o['Status'] || o.status || '').toLowerCase() !== 'not_used');
     let removed = [];
     const remaining = [];
 
     for (const need of needs) {
       if (!need.assignedTo) { remaining.push(need); continue; }
 
-      // Find an order assigned to the same customer that arrived after the need was added
       const match = orders.find(o => {
         const assignment = o['CustomerAssignment'] || o.customerAssignment || '';
         if (!assignment) return false;
-
-        // Handle split assignments
         if (assignment.startsWith('SPLIT:')) {
-          try {
-            const sd = JSON.parse(assignment.slice(6));
-            return (sd.splits || []).some(s => s.c === need.assignedTo);
-          } catch { return false; }
+          try { return (JSON.parse(assignment.slice(6)).splits || []).some(s => s.c === need.assignedTo); }
+          catch { return false; }
         }
-
         if (assignment !== need.assignedTo) return false;
-
-        // Order must be dated on or after the need was added
         const orderDate = o['DateSort'] || o.dateSort || o['Date'] || o.date || '';
-        if (!orderDate || !need.dateAdded) return true; // If no dates, assume match
+        if (!orderDate || !need.dateAdded) return true;
         return orderDate >= need.dateAdded;
       });
 
-      if (match) {
-        removed.push(need);
-      } else {
-        remaining.push(need);
-      }
+      if (match) removed.push(need);
+      else remaining.push(need);
     }
 
     if (removed.length) {
       needs = remaining;
       saveNeeds();
-      renderList();
-      updateStats();
-      populateCustomerDropdowns();
+      renderAll();
       incrementFulfilled(removed.length);
-
       const names = removed.map(n => `"${n.what}"${n.assignedTo ? ' for ' + n.assignedTo.split(' — ')[0] : ''}`).join(', ');
       showFulfilledBanner(`✓ ${removed.length} item${removed.length > 1 ? 's' : ''} matched & removed: ${names}`);
       showToast(`${removed.length} item${removed.length > 1 ? 's' : ''} fulfilled ✓`, 'ok');
     }
-  } catch (e) {
-    console.error('checkFulfilled error:', e);
-  }
+  } catch (e) { console.error('checkFulfilled error:', e); }
 }
 
 function showFulfilledBanner(msg) {
   document.getElementById('fulfilledMsg').textContent = msg;
   document.getElementById('fulfilledBanner').classList.add('show');
 }
-function dismissBanner() {
-  document.getElementById('fulfilledBanner').classList.remove('show');
+function dismissBanner() { document.getElementById('fulfilledBanner').classList.remove('show'); }
+
+/* ── Tabs ── */
+function switchTab(tab) {
+  activeTab = tab;
+  document.getElementById('tab-pending-btn').classList.toggle('active', tab === 'pending');
+  document.getElementById('tab-ordered-btn').classList.toggle('active', tab === 'ordered');
+  document.getElementById('tab-pending').classList.toggle('active', tab === 'pending');
+  document.getElementById('tab-ordered').classList.toggle('active', tab === 'ordered');
 }
 
 /* ── Render ── */
-function renderList() {
+function renderAll() {
+  renderPending();
+  renderOrdered();
+  updateStats();
+  populateCustomerDropdowns();
+}
+
+function renderPending() {
   const cf = document.getElementById('custFilter').value;
   const sort = document.getElementById('sortBy').value;
-
-  let list = [...needs];
+  let list = needs.filter(n => (n.status || 'pending') === 'pending');
   if (cf) list = list.filter(n => n.assignedTo === cf);
 
   list.sort((a, b) => {
     if (sort === 'date-old') return (a.dateAdded || '').localeCompare(b.dateAdded || '');
     if (sort === 'customer') return (a.assignedTo || '').localeCompare(b.assignedTo || '');
-    return (b.dateAdded || '').localeCompare(a.dateAdded || ''); // newest first
+    if (sort === 'cost-high') return itemCost(b) - itemCost(a);
+    return (b.dateAdded || '').localeCompare(a.dateAdded || '');
   });
 
-  const tbody = document.getElementById('tableBody');
+  const tbody = document.getElementById('pendingBody');
   if (!list.length) {
-    tbody.innerHTML = `<tr><td colspan="6" class="empty">
-      No items yet.<div class="empty-sub">Hit "+ Add Item" to start your order list.</div>
-    </td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="8" class="empty">Nothing on the list yet.<div class="empty-sub">Hit "+ Add Item" to start your order list.</div></td></tr>`;
+    updateGrandTotal([]);
     return;
   }
 
-  tbody.innerHTML = list.map(n => {
-    const qtyLabel = n.qty + (n.unit ? ` ${n.unit}` : '');
-    const hasCustomer = !!n.assignedTo;
-    const customerName = n.assignedTo ? n.assignedTo.split(' — ')[0] : '';
-    const vehicle = n.assignedTo && n.assignedTo.includes(' — ') ? n.assignedTo.split(' — ').slice(1).join(' — ') : '';
-    const dateDisplay = n.dateAdded ? new Date(n.dateAdded + 'T12:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: '2-digit' }) : '—';
+  tbody.innerHTML = list.map(n => buildRow(n, 'pending')).join('');
+  updateGrandTotal(list);
+}
 
-    return `<tr>
-      <td><span class="item-name">${esc(n.what)}</span></td>
-      <td><span class="qty-badge">×${esc(qtyLabel)}</span></td>
-      <td>${hasCustomer
-        ? `<span class="assign-tag has-customer">${esc(customerName)}${vehicle ? '<br><span style="opacity:.6;font-size:.58rem;">' + esc(vehicle) + '</span>' : ''}</span>`
-        : `<span class="assign-tag" style="color:var(--text-muted);border-style:dashed;">—</span>`
-      }</td>
-      <td><span class="notes-cell" title="${esc(n.notes || '')}">${n.notes ? esc(n.notes) : '<span style="color:var(--text-muted)">—</span>'}</span></td>
-      <td><span class="date-cell">${dateDisplay}</span></td>
-      <td>
-        <div style="display:flex;gap:4px;">
-          <button class="act-btn" onclick="editItem('${esc(n.id)}')">✎ Edit</button>
-          <button class="act-btn del" onclick="deleteItem('${esc(n.id)}')">🗑</button>
-        </div>
-      </td>
-    </tr>`;
-  }).join('');
+function renderOrdered() {
+  const list = needs.filter(n => n.status === 'ordered');
+  const tbody = document.getElementById('orderedBody');
+  if (!list.length) {
+    tbody.innerHTML = `<tr><td colspan="8" class="empty">No items marked as ordered.<div class="empty-sub">When you place an order, hit "Mark Ordered" to move items here.</div></td></tr>`;
+    return;
+  }
+  tbody.innerHTML = list.map(n => buildRow(n, 'ordered')).join('');
+}
+
+function buildRow(n, tab) {
+  const qtyLabel = n.qty + (n.unit ? ` ${n.unit}` : '');
+  const hasCustomer = !!n.assignedTo;
+  const customerName = n.assignedTo ? n.assignedTo.split(' — ')[0] : '';
+  const vehicle = n.assignedTo && n.assignedTo.includes(' — ') ? n.assignedTo.split(' — ').slice(1).join(' — ') : '';
+  const dateStr = tab === 'ordered' ? (n.dateOrdered || n.dateAdded) : n.dateAdded;
+  const dateDisplay = dateStr ? new Date(dateStr + 'T12:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: '2-digit' }) : '—';
+  const hasPrice = n.unitPrice > 0;
+  const cost = itemCost(n);
+  const priceHtml = hasPrice
+    ? `<span class="price-cell">$${Number(n.unitPrice).toFixed(2)}</span>`
+    : `<span style="color:var(--text-muted);font-family:'DM Mono',monospace;font-size:.7rem;">—</span>`;
+  const costHtml = cost > 0
+    ? `<span class="cost-cell">$${cost.toFixed(2)}</span>`
+    : `<span class="cost-cell no-price">—</span>`;
+
+  const assignHtml = hasCustomer
+    ? `<span class="assign-tag has-customer">${esc(customerName)}${vehicle ? '<br><span style="opacity:.6;font-size:.58rem;">' + esc(vehicle) + '</span>' : ''}</span>`
+    : `<span class="assign-tag" style="color:var(--text-muted);border-style:dashed;">—</span>`;
+
+  let actions = '';
+  if (tab === 'pending') {
+    actions = `<div style="display:flex;gap:4px;flex-wrap:wrap;">
+      <button class="act-btn order" onclick="markOrdered('${esc(n.id)}')">✓ Ordered</button>
+      <button class="act-btn" onclick="editItem('${esc(n.id)}')">✎ Edit</button>
+      <button class="act-btn del" onclick="deleteItem('${esc(n.id)}')">🗑</button>
+    </div>`;
+  } else {
+    actions = `<div style="display:flex;gap:4px;">
+      <button class="act-btn restore" onclick="restoreItem('${esc(n.id)}')">↩ Restore</button>
+      <button class="act-btn del" onclick="deleteItem('${esc(n.id)}')">🗑</button>
+    </div>`;
+  }
+
+  return `<tr${tab === 'ordered' ? ' class="ordered-row"' : ''}>
+    <td><span class="item-name">${esc(n.what)}</span></td>
+    <td><span class="qty-badge">×${esc(qtyLabel)}</span></td>
+    <td class="right">${priceHtml}</td>
+    <td class="right">${costHtml}</td>
+    <td>${assignHtml}</td>
+    <td><span class="notes-cell" title="${esc(n.notes || '')}">${n.notes ? esc(n.notes) : '<span style="color:var(--text-muted)">—</span>'}</span></td>
+    <td><span class="date-cell">${dateDisplay}</span></td>
+    <td>${actions}</td>
+  </tr>`;
+}
+
+function updateGrandTotal(list) {
+  const itemsWithPrice = list.filter(n => n.unitPrice > 0);
+  const total = list.reduce((s, n) => s + itemCost(n), 0);
+  const missing = list.length - itemsWithPrice.length;
+  document.getElementById('grandTotal').textContent = total > 0 ? '$' + total.toFixed(2) : '$0.00';
+  document.getElementById('totalSub').textContent = missing > 0
+    ? `${itemsWithPrice.length} of ${list.length} items priced · ${missing} without price`
+    : list.length > 0 ? `${list.length} item${list.length !== 1 ? 's' : ''} · all priced` : '';
+}
+
+function itemCost(n) {
+  const qty = Number(n.qty) || 1;
+  const price = Number(n.unitPrice) || 0;
+  return qty * price;
 }
 
 function updateStats() {
-  const pending = needs.length;
-  const assigned = needs.filter(n => n.assignedTo).length;
-  const unassigned = pending - assigned;
-  document.getElementById('sPending').textContent = pending || '0';
-  document.getElementById('sAssigned').textContent = assigned || '0';
-  document.getElementById('sUnassigned').textContent = unassigned || '0';
+  const pending = needs.filter(n => (n.status || 'pending') === 'pending');
+  const ordered = needs.filter(n => n.status === 'ordered');
+  const total = pending.reduce((s, n) => s + itemCost(n), 0);
+  document.getElementById('sPending').textContent = pending.length || '0';
+  document.getElementById('sTotal').textContent = total > 0 ? '$' + total.toFixed(2) : '—';
+  document.getElementById('sOrdered').textContent = ordered.length || '0';
 }
 
+/* ── Actions ── */
+function markOrdered(id) {
+  const idx = needs.findIndex(n => n.id === id);
+  if (idx === -1) return;
+  needs[idx].status = 'ordered';
+  needs[idx].dateOrdered = new Date().toISOString().slice(0, 10);
+  saveNeeds();
+  renderAll();
+  showToast(`"${needs[idx].what}" marked as ordered ✓`, 'ok');
+}
+
+function restoreItem(id) {
+  const idx = needs.findIndex(n => n.id === id);
+  if (idx === -1) return;
+  needs[idx].status = 'pending';
+  delete needs[idx].dateOrdered;
+  saveNeeds();
+  renderAll();
+  showToast('Restored to Need to Order');
+}
+
+function deleteItem(id) {
+  const n = needs.find(x => x.id === id);
+  if (!n) return;
+  if (!confirm(`Remove "${n.what}" from the list?`)) return;
+  needs = needs.filter(x => x.id !== id);
+  saveNeeds();
+  renderAll();
+  showToast('Item removed');
+}
+
+function editItem(id) { openModal(id); }
+
 /* ── Modal ── */
+function updateEstPreview() {
+  const qty = parseFloat(document.getElementById('f_qty').value) || 0;
+  const price = parseFloat(document.getElementById('f_price').value) || 0;
+  const prev = document.getElementById('estPreview');
+  if (qty > 0 && price > 0) {
+    prev.textContent = `Est. cost: ${qty} × $${price.toFixed(2)} = $${(qty * price).toFixed(2)}`;
+    prev.classList.add('show');
+  } else {
+    prev.classList.remove('show');
+  }
+}
+
 function openModal(id = null) {
   editingId = id;
   document.getElementById('modalTitle').textContent = id ? 'Edit Item' : 'Add Item to Order';
+  document.getElementById('estPreview').classList.remove('show');
   if (id) {
     const n = needs.find(x => x.id === id);
     if (!n) return;
     document.getElementById('f_what').value = n.what || '';
     document.getElementById('f_qty').value = n.qty || '';
     document.getElementById('f_unit').value = n.unit || '';
+    document.getElementById('f_price').value = n.unitPrice || '';
     document.getElementById('f_notes').value = n.notes || '';
-    // Set customer after a tick (dropdown may need to populate)
-    setTimeout(() => { document.getElementById('f_customer').value = n.assignedTo || ''; }, 10);
+    setTimeout(() => {
+      document.getElementById('f_customer').value = n.assignedTo || '';
+      updateEstPreview();
+    }, 10);
   } else {
-    ['f_what', 'f_qty', 'f_unit', 'f_notes'].forEach(id => document.getElementById(id).value = '');
+    ['f_what', 'f_qty', 'f_unit', 'f_price', 'f_notes'].forEach(fid => document.getElementById(fid).value = '');
     document.getElementById('f_customer').value = '';
   }
   document.getElementById('modal').classList.add('open');
@@ -487,12 +646,11 @@ function closeModal() {
   editingId = null;
 }
 
-function editItem(id) { openModal(id); }
-
 function saveItem() {
   const what = document.getElementById('f_what').value.trim();
   const qty = parseInt(document.getElementById('f_qty').value) || 1;
   const unit = document.getElementById('f_unit').value.trim();
+  const unitPrice = parseFloat(document.getElementById('f_price').value) || 0;
   const assignedTo = document.getElementById('f_customer').value;
   const notes = document.getElementById('f_notes').value.trim();
 
@@ -501,36 +659,22 @@ function saveItem() {
   if (editingId) {
     const idx = needs.findIndex(n => n.id === editingId);
     if (idx !== -1) {
-      needs[idx] = { ...needs[idx], what, qty, unit, assignedTo, notes };
+      needs[idx] = { ...needs[idx], what, qty, unit, unitPrice, assignedTo, notes };
       showToast('Item updated ✓', 'ok');
     }
   } else {
-    const today = new Date().toISOString().slice(0, 10);
     needs.push({
       id: 'need_' + Date.now() + '_' + Math.random().toString(36).slice(2, 7),
-      what, qty, unit, assignedTo, notes,
-      dateAdded: today
+      what, qty, unit, unitPrice, assignedTo, notes,
+      status: 'pending',
+      dateAdded: new Date().toISOString().slice(0, 10)
     });
     showToast('Item added ✓', 'ok');
   }
 
   saveNeeds();
-  renderList();
-  updateStats();
-  populateCustomerDropdowns();
+  renderAll();
   closeModal();
-}
-
-function deleteItem(id) {
-  const n = needs.find(x => x.id === id);
-  if (!n) return;
-  if (!confirm(`Remove "${n.what}" from the list?`)) return;
-  needs = needs.filter(x => x.id !== id);
-  saveNeeds();
-  renderList();
-  updateStats();
-  populateCustomerDropdowns();
-  showToast('Item removed');
 }
 
 /* ── Util ── */
@@ -554,12 +698,7 @@ function esc(s) {
   return String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 }
 
-// Close modal on backdrop click
-document.getElementById('modal').addEventListener('click', function(e) {
-  if (e.target === this) closeModal();
-});
-
-// Keyboard shortcuts
+document.getElementById('modal').addEventListener('click', function(e) { if (e.target === this) closeModal(); });
 document.addEventListener('keydown', e => {
   if (e.key === 'Escape') closeModal();
   if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') saveItem();
